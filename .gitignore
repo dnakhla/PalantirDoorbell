@@ -27,6 +27,14 @@ ENV/
 env.bak/
 venv.bak/
 
+# Environment variables and secrets
+.env
+.env.local
+.env.*.local
+*.key
+api_keys.txt
+secrets.txt
+
 # IDE and system files
 .DS_Store
 .vscode/
