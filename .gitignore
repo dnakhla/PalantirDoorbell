@@ -1,0 +1,52 @@
+# Runtime data files
+*.log
+*.parquet
+*.csv
+*.wav
+*.mp3
+*.mp4
+*.avi
+*.mov
+*.mkv
+temp_audio.wav
+
+# Generated directories
+audio_recordings/
+captured_subjects/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+ai_cam/
+.env
+.venv
+ENV/
+env.bak/
+venv.bak/
+
+# IDE and system files
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.claude/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Model files (optional - comment out if you want to include them)
+*.pt
+*.onnx
+*.engine
+*.trt

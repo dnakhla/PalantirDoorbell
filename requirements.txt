@@ -1,0 +1,14 @@
+opencv-python-headless==4.8.0.74
+ultralytics==8.2.2
+onnxruntime==1.16.3
+coremltools==7.1
+numpy==1.24.4
+fastapi==0.110.0
+uvicorn==0.22.0
+python-multipart==0.0.9
+aiofiles==23.2.1
+pyarrow==15.0.2
+supervision==0.19.0
+ffmpeg-python==0.2.0
+openai-whisper==20250625
+requests==2.31.0
