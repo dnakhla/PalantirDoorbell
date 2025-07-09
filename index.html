@@ -992,35 +992,271 @@
             margin-right: 10px;
         }
         
+        /* Mobile-first responsive design */
+        @media (max-width: 1024px) {
+            .hero::before {
+                font-size: 24px;
+                top: 10px;
+            }
+            
+            .satire-section::before {
+                font-size: 48px;
+            }
+            
+            .tech-specs::before {
+                font-size: 32px;
+            }
+        }
+        
         @media (max-width: 768px) {
+            .header-container {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+            
+            .street-art-header::before {
+                content: 'SMILE!';
+                font-size: 14px;
+                top: 5px;
+                right: 10px;
+                transform: rotate(-3deg);
+            }
+            
+            .logo {
+                font-size: 20px;
+            }
+            
+            .logo::after {
+                right: -30px;
+                font-size: 24px;
+            }
+            
+            .ticker-text {
+                font-size: 12px;
+            }
+            
+            .hero {
+                padding: 40px 0;
+            }
+            
+            .hero::before {
+                content: 'BIG BROTHER IS WATCHING';
+                font-size: 18px;
+                top: 10px;
+                left: 50%;
+                transform: translateX(-50%) rotate(-1deg);
+            }
+            
             .hero-content {
                 grid-template-columns: 1fr;
                 gap: 30px;
+                padding: 0 15px;
             }
             
             .hero-text h1 {
-                font-size: 36px;
+                font-size: 32px;
+                text-align: center;
+            }
+            
+            .subtitle {
+                font-size: 16px;
+                text-align: center;
+            }
+            
+            .description {
+                font-size: 14px;
+            }
+            
+            .cta-button {
+                display: block;
+                text-align: center;
+                margin: 20px auto;
+                max-width: 200px;
+            }
+            
+            .surveillance-mockup {
+                order: -1;
+                transform: rotate(0deg);
+                margin: 0 auto;
+                max-width: 300px;
+            }
+            
+            .mockup-screen {
+                height: 200px;
+            }
+            
+            .section-title {
+                font-size: 28px;
+                padding: 0 20px;
+            }
+            
+            .satire-section::before {
+                content: 'YOUR CAMERA';
+                font-size: 20px;
+                top: 10px;
+                right: 10px;
+                transform: rotate(8deg);
+            }
+            
+            .use-cases-section::before {
+                content: 'ALWAYS WATCHING';
+                font-size: 16px;
+                top: 10px;
+                left: 10px;
+                transform: rotate(-5deg);
+            }
+            
+            .tech-specs::before {
+                content: 'NO PRIVACY';
+                font-size: 18px;
+                top: 10px;
+                left: 10px;
+                transform: rotate(-8deg);
+            }
+            
+            .legal-section::before {
+                content: 'KNOW YOUR RIGHTS';
+                font-size: 16px;
+                top: 10px;
+                right: 10px;
+                transform: rotate(5deg);
             }
             
             .features-grid {
-                grid-template-columns: repeat(2, 1fr);
+                grid-template-columns: 1fr;
+                gap: 20px;
+                padding: 0 15px;
+            }
+            
+            .feature-card {
+                padding: 20px;
+                transform: rotate(0deg);
+            }
+            
+            .feature-card:nth-child(even) {
+                transform: rotate(0deg);
+            }
+            
+            .process-stats {
+                flex-direction: column;
+                gap: 15px;
             }
             
             .tech-grid {
                 grid-template-columns: 1fr;
+                gap: 15px;
             }
             
             .use-cases-grid {
                 grid-template-columns: 1fr;
+                gap: 20px;
+                padding: 0 15px;
+            }
+            
+            .use-case-card {
+                padding: 20px;
+                transform: rotate(0deg);
+            }
+            
+            .use-case-card:nth-child(even) {
+                transform: rotate(0deg);
             }
             
             .legal-content {
                 grid-template-columns: 1fr;
                 gap: 20px;
+                padding: 0 15px;
+            }
+            
+            .legal-text,
+            .legal-facts {
+                transform: rotate(0deg);
             }
             
             .reality-stats {
-                grid-template-columns: repeat(2, 1fr);
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .reality-stat {
+                min-width: auto;
+            }
+            
+            .disclaimer-text {
+                max-width: 90%;
+                font-size: 14px;
+            }
+            
+            .disclaimer::before,
+            .disclaimer::after {
+                display: none;
+            }
+            
+            .footer-art::before {
+                content: '2025';
+                font-size: 24px;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%) rotate(-15deg);
+                color: rgba(0, 0, 0, 0.1);
+            }
+            
+            .container {
+                padding: 0 15px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .hero-text h1 {
+                font-size: 28px;
+            }
+            
+            .subtitle {
+                font-size: 14px;
+            }
+            
+            .description {
+                font-size: 13px;
+            }
+            
+            .section-title {
+                font-size: 24px;
+            }
+            
+            .feature-title,
+            .use-case-title {
+                font-size: 20px;
+            }
+            
+            .feature-description,
+            .use-case-description {
+                font-size: 14px;
+            }
+            
+            .cta-button {
+                padding: 12px 24px;
+                font-size: 14px;
+            }
+            
+            .mockup-screen {
+                height: 160px;
+            }
+            
+            .ticker-text {
+                font-size: 11px;
+            }
+            
+            .irony-box {
+                padding: 15px;
+                font-size: 14px;
+                transform: rotate(0deg);
+            }
+            
+            .use-case-benefit {
+                padding: 12px;
+                font-size: 13px;
+                transform: rotate(0deg);
             }
         }
     </style>
@@ -1030,7 +1266,7 @@
         <div class="header-container">
             <a href="#" class="logo">DoorBell-antir</a>
             <div style="font-size: 12px; color: #999;">
-                Making Orwell Proud Since 2024
+                Making Orwell Proud Since 2025
             </div>
         </div>
     </header>
