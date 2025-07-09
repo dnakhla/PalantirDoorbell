@@ -88,8 +88,24 @@ class DoorbellAI:
             
             if matching_profile_id:
                 # Add to existing profile
-                self.person_clustering.add_detection_to_profile(matching_profile_id, detection, image_path)
+                updated_profile = self.person_clustering.add_detection_to_profile(matching_profile_id, detection, image_path)
                 logger.info(f"Added detection to existing profile: {matching_profile_id}")
+                
+                # Re-analyze with all images if person has multiple images
+                if updated_profile and len(updated_profile.images) >= 2:
+                    logger.info(f"🔄 Re-analyzing person with {len(updated_profile.images)} images...")
+                    timestamps = [det.timestamp.isoformat() for det in updated_profile.detections]
+                    sequence_analysis = self.ai_analyzer.analyze_person_sequence(updated_profile.images, timestamps)
+                    
+                    if "comprehensive_analysis" in sequence_analysis:
+                        # Update profile with new analysis
+                        updated_profile.ai_analysis = sequence_analysis
+                        comp_analysis = sequence_analysis["comprehensive_analysis"]
+                        updated_profile.name = comp_analysis.get("nickname", updated_profile.name)
+                        updated_profile.description = comp_analysis.get("summary", updated_profile.description)
+                        logger.info(f"✅ Updated profile with sequence analysis: {comp_analysis.get('nickname', 'Unknown')}")
+                    else:
+                        logger.warning("❌ Sequence analysis failed")
             else:
                 # Create new profile with comprehensive AI analysis
                 logger.info(f"🧠 Running comprehensive AI analysis on new person...")
@@ -128,6 +144,8 @@ class DoorbellAI:
             
             # Save profiles periodically
             self.person_clustering.save_profiles()
+            
+            # Note: Real-time updates will be handled by UI polling and WebSocket fallback
             
         except Exception as e:
             logger.error(f"Error processing person detection: {e}")

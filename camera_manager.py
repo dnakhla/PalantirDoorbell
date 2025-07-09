@@ -1,6 +1,7 @@
 import cv2
 import time
 import threading
+import numpy as np
 from datetime import datetime
 from typing import Optional, Callable
 from ultralytics import YOLO
@@ -24,20 +25,33 @@ class CameraManager:
     def initialize(self) -> bool:
         """Initialize camera and YOLO model"""
         try:
-            # Initialize camera with high quality settings matching web display
+            # Setup optimal FFmpeg environment for RTSP
+            import os
+            os.environ['OPENCV_FFMPEG_CAPTURE_OPTIONS'] = (
+                'rtsp_transport;tcp|'
+                'buffer_size;1024000|'
+                'max_delay;500000|'
+                'stimeout;30000000'
+            )
+            
+            # Initialize camera with optimized settings
             self.cap = cv2.VideoCapture(config.RTSP_URL, cv2.CAP_FFMPEG)
             if not self.cap.isOpened():
                 logger.error("Could not open camera stream")
                 return False
             
-            # Set high quality camera properties for capture (same as web display)
+            # Optimal camera properties for stable detection
             self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)  # Full HD width
             self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)  # Full HD height
-            self.cap.set(cv2.CAP_PROP_FPS, 30)
-            self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)  # Reduce buffer for lower latency
+            self.cap.set(cv2.CAP_PROP_FPS, 25)  # Standard FPS for stability
+            self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)  # Minimal buffer for low latency
             
-            # Enable hardware acceleration if available
+            # H264 codec and error resilience settings
             self.cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('H', '2', '6', '4'))
+            self.cap.set(cv2.CAP_PROP_OPEN_TIMEOUT_MSEC, 30000)  # 30 second connection timeout
+            self.cap.set(cv2.CAP_PROP_READ_TIMEOUT_MSEC, 30000)   # 30 second read timeout
+            
+            # Format specification removed - invalid constant
             
             # Verify actual camera settings
             actual_width = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -106,23 +120,51 @@ class CameraManager:
     
     def _detection_loop(self):
         """Main detection loop"""
+        consecutive_failures = 0
+        max_failures = 5
+        frame_skip_count = 0
+        skip_every_n_frames = 2  # Process every 2nd frame to reduce load
+        
         while self.is_running:
             try:
                 ret, frame = self.cap.read()
                 if not ret:
-                    logger.warning("Failed to read frame - attempting to reconnect...")
-                    # Try to reconnect the camera
+                    consecutive_failures += 1
+                    logger.warning(f"Failed to read frame ({consecutive_failures}/{max_failures}) - attempting to reconnect...")
+                    
+                    if consecutive_failures >= max_failures:
+                        logger.error("Too many consecutive failures, stopping detection")
+                        break
+                    
+                    # Try to reconnect the camera with optimal settings
                     self.cap.release()
                     self.cap = cv2.VideoCapture(config.RTSP_URL, cv2.CAP_FFMPEG)
                     if self.cap.isOpened():
                         logger.info("Camera reconnected successfully")
-                        # Set the same properties again
+                        # Apply optimal settings again
                         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
                         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
-                        self.cap.set(cv2.CAP_PROP_FPS, 30)
+                        self.cap.set(cv2.CAP_PROP_FPS, 25)
                         self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
                         self.cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('H', '2', '6', '4'))
-                    time.sleep(1)
+                        self.cap.set(cv2.CAP_PROP_OPEN_TIMEOUT_MSEC, 30000)
+                        self.cap.set(cv2.CAP_PROP_READ_TIMEOUT_MSEC, 30000)
+                        # Format specification removed - invalid constant
+                    
+                    time.sleep(min(consecutive_failures, 5))  # Exponential backoff up to 5 seconds
+                    continue
+                
+                # Reset failure counter on successful frame read
+                consecutive_failures = 0
+                
+                # Validate frame integrity with comprehensive checks
+                if not self._validate_frame(frame):
+                    logger.warning("Received corrupted frame, skipping...")
+                    continue
+                
+                # Skip frames to reduce processing load
+                frame_skip_count += 1
+                if frame_skip_count % skip_every_n_frames != 0:
                     continue
                 
                 # Log frame dimensions for debugging
@@ -132,14 +174,14 @@ class CameraManager:
                     logger.info(f"🎥 Processing frames at {frame_width}x{frame_height} resolution")
                     logger.info(f"🎥 Frame received successfully, shape: {frame.shape}")
                 
-                # Run YOLO inference with high resolution for better person detection
+                # Run YOLO inference with optimized settings for stability
                 results = self.model(
                     frame, 
-                    imgsz=1088,  # Higher resolution for better detection (multiple of 32)
+                    imgsz=960,  # Reduced resolution for better stability
                     conf=config.CONFIDENCE_THRESHOLD,  # Use our threshold
                     iou=0.5,  # Non-max suppression threshold
                     agnostic_nms=False,
-                    max_det=100,  # Allow many detections
+                    max_det=10,  # Reduced max detections
                     classes=[0],  # Only detect persons (class 0)
                     verbose=False
                 )
@@ -150,6 +192,29 @@ class CameraManager:
             except Exception as e:
                 logger.error(f"Error in detection loop: {e}")
                 time.sleep(1)
+    
+    def _validate_frame(self, frame):
+        """Validate frame integrity to detect corruption"""
+        if frame is None:
+            return False
+        
+        # Check frame dimensions
+        if frame.size == 0 or frame.shape[0] == 0 or frame.shape[1] == 0:
+            return False
+        
+        # Check for all-black frame (potential corruption)
+        if np.count_nonzero(frame) == 0:
+            return False
+        
+        # Check for uniform color (potential corruption)
+        if np.max(frame) == np.min(frame):
+            return False
+        
+        # Check for reasonable frame shape (3 channels for BGR)
+        if len(frame.shape) != 3 or frame.shape[2] != 3:
+            return False
+        
+        return True
     
     def _process_detections(self, results, frame):
         """Process YOLO detection results"""

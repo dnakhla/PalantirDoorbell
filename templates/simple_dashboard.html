@@ -173,7 +173,7 @@
                     name: profile.name || generateName(profile.description),
                     image: profile.images && profile.images.length > 0 
                         ? `/images/${profile.images[profile.images.length - 1].split('/').pop()}`
-                        : '/static/placeholder.jpg',
+                        : 'https://placehold.co/200x150/333/fff?text=SUBJECT+IMAGE+NOT+FOUND',
                     visits: profile.total_appearances
                 }));
                 

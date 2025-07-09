@@ -1,11 +1,13 @@
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse, JSONResponse, FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from contextlib import asynccontextmanager
 import os
 import json
 import cv2
 import asyncio
+import numpy as np
 from datetime import datetime
 from typing import Dict, List, Optional
 import logging
@@ -19,25 +21,64 @@ logger = logging.getLogger(__name__)
 # Global instances
 camera_stream = None
 app_instance = None
+websocket_connections = set()
+
+def _validate_web_frame(frame):
+    """Validate frame integrity for web stream"""
+    if frame is None:
+        return False
+    
+    # Check frame dimensions
+    if frame.size == 0 or frame.shape[0] == 0 or frame.shape[1] == 0:
+        return False
+    
+    # Check for all-black frame (potential corruption)
+    if np.count_nonzero(frame) == 0:
+        return False
+    
+    # Check for uniform color (potential corruption)
+    if np.max(frame) == np.min(frame):
+        return False
+    
+    # Check for reasonable frame shape (3 channels for BGR)
+    if len(frame.shape) != 3 or frame.shape[2] != 3:
+        return False
+    
+    return True
 
 def get_camera_stream():
     """Initialize camera stream for video display"""
     global camera_stream
     if camera_stream is None:
         try:
-            camera_stream = cv2.VideoCapture(config.RTSP_URL, cv2.CAP_FFMPEG)
-            # Use maximum available resolution for best quality
-            camera_stream.set(cv2.CAP_PROP_FRAME_WIDTH, 2560)
-            camera_stream.set(cv2.CAP_PROP_FRAME_HEIGHT, 1920)
-            camera_stream.set(cv2.CAP_PROP_BUFFERSIZE, 1)
-            camera_stream.set(cv2.CAP_PROP_FPS, 30)
-            # Enable hardware acceleration if available
-            camera_stream.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('H', '2', '6', '4'))
+            # Setup optimal FFmpeg environment for RTSP
+            import os
+            os.environ['OPENCV_FFMPEG_CAPTURE_OPTIONS'] = (
+                'rtsp_transport;tcp|'
+                'buffer_size;1024000|'
+                'max_delay;500000|'
+                'stimeout;30000000'
+            )
             
-            # Verify actual settings
+            camera_stream = cv2.VideoCapture(config.RTSP_URL, cv2.CAP_FFMPEG)
+            
+            # Optimal settings for web display stability
+            camera_stream.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
+            camera_stream.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+            camera_stream.set(cv2.CAP_PROP_FPS, 25)
+            camera_stream.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+            camera_stream.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('H', '2', '6', '4'))
+            camera_stream.set(cv2.CAP_PROP_OPEN_TIMEOUT_MSEC, 30000)
+            camera_stream.set(cv2.CAP_PROP_READ_TIMEOUT_MSEC, 30000)
+            # Format specification removed - invalid constant
+            
+            # Verify connection and settings
+            if not camera_stream.isOpened():
+                raise ConnectionError("Failed to open camera stream")
+            
             actual_width = int(camera_stream.get(cv2.CAP_PROP_FRAME_WIDTH))
             actual_height = int(camera_stream.get(cv2.CAP_PROP_FRAME_HEIGHT))
-            logger.info(f"High-resolution camera stream initialized for web display at {actual_width}x{actual_height}")
+            logger.info(f"Optimized camera stream initialized for web display at {actual_width}x{actual_height}")
         except Exception as e:
             logger.error(f"Failed to initialize camera stream: {e}")
     return camera_stream
@@ -65,10 +106,26 @@ def generate_frames():
         logger.warning(f"Could not load YOLO for live feed: {e}")
         yolo_model = None
     
+    consecutive_failures = 0
+    max_failures = 3
+    
     while True:
         ret, frame = camera.read()
         if not ret:
-            break
+            consecutive_failures += 1
+            logger.warning(f"Web stream failed to read frame ({consecutive_failures}/{max_failures})")
+            
+            if consecutive_failures >= max_failures:
+                logger.error("Too many web stream failures, stopping")
+                break
+            
+            time.sleep(0.1)
+            continue
+        
+        # Reset failure counter and validate frame
+        consecutive_failures = 0
+        if not _validate_web_frame(frame):
+            continue
         
         # Add real-time object detection overlay
         if yolo_model is not None:
@@ -83,31 +140,20 @@ def generate_frames():
                         confidence = box.conf.item()
                         class_name = yolo_model.names[class_id]
                         
-                        # Define colors and labels for different object types
+                        # Define white boundaries with colored labels for different object types
+                        box_color = (255, 255, 255)  # White for all boundaries
+                        corner_color = (255, 255, 255)  # White corners
+                        label_color = (255, 255, 255)   # Purple label
+                        
                         if class_id == 0:  # Person
-                            box_color = (0, 255, 100)  # Green
-                            corner_color = (255, 255, 0)  # Yellow
-                            label_color = (0, 255, 100)  # Green
                             main_label = "SUBJECT DETECTED"
                         elif class_id == 2:  # Car
-                            box_color = (255, 100, 0)  # Orange
-                            corner_color = (255, 0, 255)  # Magenta
-                            label_color = (255, 100, 0)  # Orange
                             main_label = "VEHICLE DETECTED"
                         elif class_id == 3:  # Motorcycle
-                            box_color = (0, 100, 255)  # Blue
-                            corner_color = (255, 0, 0)  # Red
-                            label_color = (0, 100, 255)  # Blue
                             main_label = "MOTORCYCLE DETECTED"
                         elif class_id == 5:  # Bus
-                            box_color = (255, 0, 0)  # Red
-                            corner_color = (0, 255, 255)  # Cyan
-                            label_color = (255, 0, 0)  # Red
                             main_label = "BUS DETECTED"
                         elif class_id == 7:  # Truck
-                            box_color = (128, 0, 128)  # Purple
-                            corner_color = (255, 255, 0)  # Yellow
-                            label_color = (128, 0, 128)  # Purple
                             main_label = "TRUCK DETECTED"
                         else:
                             continue  # Skip unknown classes
@@ -149,9 +195,9 @@ def generate_frames():
                         confidence_label = f"{confidence:.1%} CONFIDENCE"
                         timestamp_label = f"{datetime.now().strftime('%H:%M:%S')}"
                         
-                        # Main label background with shadow
-                        label_size = cv2.getTextSize(main_label, cv2.FONT_HERSHEY_DUPLEX, 0.8, 2)[0]
-                        label_bg_height = 35
+                        # Main label background with shadow (updated for larger font)
+                        label_size = cv2.getTextSize(main_label, cv2.FONT_HERSHEY_DUPLEX, 1.5, 2)[0]
+                        label_bg_height = 42
                         
                         # Shadow for label background
                         cv2.rectangle(frame, (x1 + 2, y1 - label_bg_height + 2), 
@@ -165,9 +211,9 @@ def generate_frames():
                         cv2.rectangle(frame, (x1, y1 - label_bg_height), 
                                      (x1 + label_size[0] + 20, y1), (255, 255, 255), 2)
                         
-                        # Main label text
+                        # Main label text (increased font size for better visibility)
                         cv2.putText(frame, main_label, (x1 + 10, y1 - 8), 
-                                   cv2.FONT_HERSHEY_DUPLEX, 0.8, (0, 0, 0), 2)
+                                   cv2.FONT_HERSHEY_DUPLEX, 1.2, (0, 0, 0), 2)
                         
                         # Confidence label (smaller, bottom right)
                         conf_size = cv2.getTextSize(confidence_label, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)[0]
@@ -189,16 +235,18 @@ def generate_frames():
             except Exception as e:
                 logger.warning(f"Error in real-time detection: {e}")
         
-        # Resize frame for web display - much higher quality
-        # Original is 2560x1920, resize to 1280x960 for better quality
-        frame = cv2.resize(frame, (1280, 960), interpolation=cv2.INTER_LANCZOS4)
+        # Resize frame for web display with optimized quality
+        # Resize to 1280x720 for better streaming performance
+        frame = cv2.resize(frame, (1280, 720), interpolation=cv2.INTER_LANCZOS4)
         
-        # Encode frame as maximum quality JPEG
-        ret, buffer = cv2.imencode('.jpg', frame, [
-            cv2.IMWRITE_JPEG_QUALITY, 95,
-            cv2.IMWRITE_JPEG_OPTIMIZE, 1,
-            cv2.IMWRITE_JPEG_PROGRESSIVE, 1
-        ])
+        # Encode frame with optimized settings for smooth streaming
+        encode_params = [
+            cv2.IMWRITE_JPEG_QUALITY, 80,  # Balanced quality for streaming
+            cv2.IMWRITE_JPEG_OPTIMIZE, 1,  # Optimize for size
+            cv2.IMWRITE_JPEG_PROGRESSIVE, 1  # Progressive JPEG for better streaming
+        ]
+        
+        ret, buffer = cv2.imencode('.jpg', frame, encode_params)
         if ret:
             frame_bytes = buffer.tobytes()
             yield (b'--frame\r\n'
@@ -226,17 +274,22 @@ async def initialize_detection_system():
         import traceback
         logger.error(f"Traceback: {traceback.format_exc()}")
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Initialize systems on startup and cleanup on shutdown"""
+    # Startup
+    await initialize_detection_system()
+    yield
+    # Shutdown (cleanup if needed)
+    pass
+
 # Create FastAPI app with hot reloading support
 app = FastAPI(
     title="Neighborhood Watch AI",
     description="Intelligence-Powered Surveillance and Person Monitoring System",
-    version="2.0.0"
+    version="2.0.0",
+    lifespan=lifespan
 )
-
-@app.on_event("startup")
-async def startup_event():
-    """Initialize systems on startup"""
-    await initialize_detection_system()
 
 # Mount static files
 app.mount("/static", StaticFiles(directory="static", html=True), name="static")
@@ -275,7 +328,9 @@ async def get_all_profiles():
     profiles_data = []
     for profile in profiles:
         profile_data = profile.get_summary()
-        profile_data["images"] = profile.images[-5:]  # Last 5 images
+        # Filter out missing images and get last 5 existing images
+        existing_images = [img for img in profile.images if os.path.exists(img)]
+        profile_data["images"] = existing_images[-5:]  # Last 5 existing images
         profiles_data.append(profile_data)
     
     return JSONResponse(profiles_data)
@@ -283,7 +338,53 @@ async def get_all_profiles():
 @app.get("/api/profiles/{profile_id}")
 async def get_profile(profile_id: str):
     """Get specific person profile"""
-    raise HTTPException(status_code=404, detail="Profile not found")
+    if not app_instance:
+        raise HTTPException(status_code=404, detail="Profile not found")
+    
+    profile = app_instance.get_profile(profile_id)
+    if not profile:
+        raise HTTPException(status_code=404, detail="Profile not found")
+    
+    profile_data = profile.get_summary()
+    # Filter out missing images and get all existing images
+    existing_images = [img for img in profile.images if os.path.exists(img)]
+    profile_data["images"] = existing_images
+    
+    return JSONResponse(profile_data)
+
+@app.delete("/api/profiles/{profile_id}")
+async def delete_profile(profile_id: str):
+    """Delete a specific person profile and associated images"""
+    if not app_instance:
+        raise HTTPException(status_code=404, detail="Profile not found")
+    
+    try:
+        # Get profile to access images
+        profile = app_instance.get_profile(profile_id)
+        if not profile:
+            raise HTTPException(status_code=404, detail="Profile not found")
+        
+        # Delete associated images
+        import os
+        for image_path in profile.images:
+            try:
+                if os.path.exists(image_path):
+                    os.remove(image_path)
+                    logger.info(f"Deleted image: {image_path}")
+            except Exception as e:
+                logger.error(f"Failed to delete image {image_path}: {e}")
+        
+        # Remove profile from memory
+        if profile_id in app_instance.person_clustering.profiles:
+            del app_instance.person_clustering.profiles[profile_id]
+            app_instance.person_clustering.save_profiles()
+            logger.info(f"Deleted profile: {profile_id}")
+        
+        return JSONResponse({"success": True, "message": f"Profile {profile_id} deleted successfully"})
+        
+    except Exception as e:
+        logger.error(f"Error deleting profile {profile_id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to delete profile: {str(e)}")
 
 @app.post("/api/profiles/{profile_id}/name")
 async def update_profile_name(profile_id: str, request: Request):
@@ -327,8 +428,18 @@ async def clear_timeline():
 
 @app.get("/api/video_feed")
 async def video_feed():
-    """Live video stream endpoint"""
-    return StreamingResponse(generate_frames(), media_type="multipart/x-mixed-replace; boundary=frame")
+    """Live video stream endpoint with optimized headers"""
+    return StreamingResponse(
+        generate_frames(), 
+        media_type="multipart/x-mixed-replace; boundary=frame",
+        headers={
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0",
+            "Connection": "keep-alive",
+            "Access-Control-Allow-Origin": "*"
+        }
+    )
 
 @app.get("/api/live_feed")
 async def get_live_feed():
@@ -357,6 +468,51 @@ async def not_found_handler(request: Request, exc):
 async def internal_error_handler(request: Request, exc):
     logger.error(f"Internal server error: {exc}")
     return JSONResponse({"error": "Internal server error"}, status_code=500)
+
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    """WebSocket endpoint for real-time updates"""
+    await websocket.accept()
+    websocket_connections.add(websocket)
+    
+    try:
+        while True:
+            # Keep connection alive
+            await asyncio.sleep(10)
+    except WebSocketDisconnect:
+        websocket_connections.remove(websocket)
+
+async def broadcast_profile_update():
+    """Broadcast profile updates to all connected clients"""
+    if not app_instance:
+        return
+    
+    profiles = app_instance.get_all_profiles()
+    
+    # Convert to JSON-serializable format
+    profiles_data = []
+    for profile in profiles:
+        profile_data = profile.get_summary()
+        # Filter out missing images and get last 5 existing images
+        existing_images = [img for img in profile.images if os.path.exists(img)]
+        profile_data["images"] = existing_images[-5:]  # Last 5 existing images
+        profiles_data.append(profile_data)
+    
+    message = {
+        "type": "profiles_update",
+        "data": profiles_data
+    }
+    
+    # Send to all connected clients
+    disconnected = set()
+    for websocket in websocket_connections:
+        try:
+            await websocket.send_json(message)
+        except:
+            disconnected.add(websocket)
+    
+    # Remove disconnected clients
+    websocket_connections -= disconnected
 
 # Development hot reload support
 if __name__ == "__main__":

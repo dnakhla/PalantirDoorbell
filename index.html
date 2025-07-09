@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WatchPost AI - Big Brother's Little Helper</title>
+    <title>DoorBell-antir - Big Brother's Little Helper</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -72,9 +72,9 @@
             content: '👁️';
             position: absolute;
             top: -5px;
-            right: -30px;
-            font-size: 20px;
-            animation: blink 2s infinite;
+            right: -39px;
+            font-size: 32px;
+            animation: blink 3s infinite;
         }
         
         @keyframes blink {
@@ -97,6 +97,7 @@
             animation: scroll 30s linear infinite;
             font-size: 14px;
             font-weight: 700;
+            text-transform:uppercase;
         }
         
         @keyframes scroll {
@@ -105,7 +106,9 @@
         }
         
         .hero {
-            background: linear-gradient(135deg, #f8f8f8 0%, #e8e8e8 100%);
+            background: 
+                linear-gradient(135deg, rgba(248, 248, 248, 0.9) 0%, rgba(232, 232, 232, 0.9) 100%),
+                url('static/banksybg.jpg') center/cover no-repeat;
             padding: 60px 0;
             position: relative;
             overflow: hidden;
@@ -310,7 +313,7 @@
         }
         
         .satire-section::before {
-            content: 'ON-PREM DYSTOPIA';
+            content: 'LOCAL DYSTOPIA';
             position: absolute;
             top: 20px;
             right: 20px;
@@ -494,7 +497,7 @@
         
         .features-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            grid-template-columns: repeat(4, 1fr);
             gap: 30px;
             margin-top: 40px;
         }
@@ -560,9 +563,10 @@
             position: absolute;
             top: 20px;
             left: 20px;
-            font-size: 32px;
-            color: #666;
+            font-size: 42px;
+            color: #999;
             font-weight: 700;
+            transform: rotate(-20deg);
         }
         
         .tech-grid {
@@ -639,7 +643,7 @@
         .disclaimer-text {
             font-size: 16px;
             font-weight: 700;
-            max-width: 800px;
+            max-width: 50%;
             margin: 0 auto;
             line-height: 1.6;
         }
@@ -649,6 +653,7 @@
             padding: 40px 0;
             text-align: center;
             position: relative;
+            overflow: hidden;
         }
         
         .footer-art::before {
@@ -676,6 +681,317 @@
             color: #999;
         }
         
+        .use-cases-section {
+            background: #fff;
+            padding: 60px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .use-cases-section::before {
+            content: 'PRACTICAL PARANOIA';
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 48px;
+            color: #eee;
+            font-weight: 900;
+            transform: rotate(-10deg);
+            z-index: 1;
+        }
+        
+        .use-cases-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .use-case-card {
+            background: #f8f8f8;
+            border: 2px solid #000;
+            padding: 30px;
+            position: relative;
+            transform: rotate(0.5deg);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .use-case-card:nth-child(even) {
+            transform: rotate(-0.5deg);
+        }
+        
+        .use-case-card:hover {
+            transform: rotate(0deg) scale(1.02);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        .use-case-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #ff0000, #ffaa00, #ff0000);
+        }
+        
+        .use-case-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+            display: block;
+            text-align: center;
+        }
+        
+        .use-case-title {
+            font-size: 24px;
+            font-weight: 900;
+            margin-bottom: 15px;
+            color: #000;
+            text-align: center;
+            position: relative;
+        }
+        
+        .use-case-title::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 2px;
+            background: #ff0000;
+        }
+        
+        .use-case-description {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .use-case-benefit {
+            background: rgba(255, 255, 0, 0.1);
+            border: 1px dashed #ffaa00;
+            padding: 15px;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #333;
+            position: relative;
+            transform: rotate(-0.5deg);
+        }
+        
+        .use-case-benefit::before {
+            content: '💡';
+            position: absolute;
+            top: -10px;
+            left: 15px;
+            background: #fff;
+            padding: 0 5px;
+            font-size: 16px;
+        }
+        
+        .surveillance-reality {
+            background: #000;
+            color: #fff;
+            padding: 40px 0;
+            text-align: center;
+            position: relative;
+        }
+        
+        .surveillance-reality::before {
+            content: 'WAKE UP CALL';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 120px;
+            color: rgba(255, 255, 255, 0.05);
+            font-weight: 900;
+            z-index: 1;
+        }
+        
+        .reality-content {
+            position: relative;
+            z-index: 2;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        .reality-title {
+            font-size: 28px;
+            font-weight: 900;
+            margin-bottom: 20px;
+            color: #ff0000;
+        }
+        
+        .reality-text {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #ccc;
+            margin-bottom: 30px;
+        }
+        
+        .reality-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 30px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .reality-stat {
+            text-align: center;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid #333;
+            min-width: 150px;
+        }
+        
+        .reality-stat-number {
+            font-size: 24px;
+            font-weight: 900;
+            color: #ff0000;
+            display: block;
+        }
+        
+        .reality-stat-label {
+            font-size: 12px;
+            color: #999;
+            text-transform: uppercase;
+            margin-top: 5px;
+        }
+        
+        .legal-section {
+            background: #f8f8f8;
+            border-top: 3px solid #ff0000;
+            border-bottom: 3px solid #ff0000;
+            padding: 50px 0;
+            position: relative;
+        }
+        
+        .legal-section::before {
+            content: 'KNOW YOUR RIGHTS';
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 36px;
+            color: #ddd;
+            font-weight: 900;
+            transform: rotate(5deg);
+        }
+        
+        .legal-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: start;
+        }
+        
+        .legal-text {
+            background: #fff;
+            padding: 30px;
+            border: 2px solid #000;
+            position: relative;
+            transform: rotate(-0.5deg);
+        }
+        
+        .legal-text::before {
+            content: 'PRIVACY REALITY';
+            position: absolute;
+            top: -15px;
+            left: 20px;
+            background: #ff0000;
+            color: #fff;
+            padding: 0 15px;
+            font-size: 12px;
+            font-weight: 700;
+            transform: rotate(1deg);
+        }
+        
+        .legal-text h3 {
+            font-size: 24px;
+            font-weight: 900;
+            margin-bottom: 15px;
+            color: #000;
+        }
+        
+        .legal-text p {
+            margin-bottom: 15px;
+            line-height: 1.6;
+            color: #333;
+        }
+        
+        .legal-highlight {
+            background: rgba(255, 255, 0, 0.2);
+            padding: 15px;
+            border-left: 4px solid #ff0000;
+            margin: 20px 0;
+            font-weight: 600;
+        }
+        
+        .legal-facts {
+            background: #fff;
+            padding: 30px;
+            border: 2px solid #000;
+            position: relative;
+            transform: rotate(0.5deg);
+        }
+        
+        .legal-facts::before {
+            content: 'LEGAL FACTS';
+            position: absolute;
+            top: -15px;
+            left: 20px;
+            background: #000;
+            color: #fff;
+            padding: 0 15px;
+            font-size: 12px;
+            font-weight: 700;
+            transform: rotate(-1deg);
+        }
+        
+        .legal-facts h3 {
+            font-size: 20px;
+            font-weight: 900;
+            margin-bottom: 20px;
+            color: #000;
+        }
+        
+        .legal-fact-item {
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f8f8f8;
+            border-left: 3px solid #ffaa00;
+        }
+        
+        .legal-fact-item strong {
+            color: #ff0000;
+            font-weight: 700;
+        }
+        
+        .legal-disclaimer {
+            grid-column: 1 / -1;
+            background: #000;
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+            margin-top: 20px;
+            border: 2px solid #ff0000;
+        }
+        
+        .legal-disclaimer::before {
+            content: '⚖️';
+            font-size: 24px;
+            margin-right: 10px;
+        }
+        
         @media (max-width: 768px) {
             .hero-content {
                 grid-template-columns: 1fr;
@@ -687,11 +1003,24 @@
             }
             
             .features-grid {
-                grid-template-columns: 1fr;
+                grid-template-columns: repeat(2, 1fr);
             }
             
             .tech-grid {
                 grid-template-columns: 1fr;
+            }
+            
+            .use-cases-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .legal-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .reality-stats {
+                grid-template-columns: repeat(2, 1fr);
             }
         }
     </style>
@@ -699,7 +1028,7 @@
 <body>
     <header class="street-art-header">
         <div class="header-container">
-            <a href="#" class="logo">WatchPost AI</a>
+            <a href="#" class="logo">DoorBell-antir</a>
             <div style="font-size: 12px; color: #999;">
                 Making Orwell Proud Since 2024
             </div>
@@ -708,30 +1037,31 @@
     
     <div class="warning-ticker">
         <div class="ticker-text">
-            🚨 PRIVACY SOLD SEPARATELY • YOUR DATA IS OUR PRODUCT • FREEDOM NOT INCLUDED • SERVICE SURVEILLANCE • BIG BROTHER APPROVED • 
+            🚨 PRIVACY SOLD SEPARATELY • YOUR DATA IS OUR PRODUCT • FREEDOM relinquished • SERVICE SURVEILLANCE • BIG BROTHER APPROVED • 
         </div>
     </div>
     
     <section class="hero">
         <div class="hero-content">
             <div class="hero-text">
-                <h1>WatchPost AI</h1>
+                <h1>DoorBell-antir</h1>
                 <p class="subtitle">Because Your Doorbell Wasn't Creepy Enough</p>
                 <p class="description">
-                    I never check my doorbell camera - but what if an AI agent could watch where I wouldn't? 
-                    This project captures photos of people passing by and creates comprehensive profiles 
-                    using 2 streamlined AI analyses per person. It's my exploration into how AI can process 
-                    continuous data streams that humans simply can't monitor 24/7. 
+                    My Reolink doorbell was working perfectly - recording everything to local SD storage. 
+                    But all that data was just... sitting there, unanalyzed. This POC demonstrates what's 
+                    possible when you add AI intelligence to existing camera infrastructure. While Ring users 
+                    send data to Amazon's cloud and Nest feeds Google's systems, I built a local proof-of-concept 
+                    that shows exactly what insights can be extracted from continuous video surveillance.
                 </p>
                 
                 <div class="irony-box">
-                    Started with a doorbell camera I never checked. Built a system that demonstrates 
-                    AI's ability to process continuous data streams and find insights where humans 
-                    would miss them - turning passive recording into active neighborhood intelligence.
+                    Started with ignored camera data. Built a system that demonstrates AI's ability to process 
+                    continuous streams and find insights where humans would miss them - turning passive 
+                    recording into active neighborhood intelligence. It's surveillance satire with a technical bite.
                 </div>
                 
                 <a href="https://github.com/dnakhla/PalantirDoorbell/tree/main" class="cta-button">
-                    Clone the code
+                    Explore the POC
                 </a>
             </div>
             
@@ -751,53 +1081,47 @@
 
     <section class="satire-section">
         <div class="container">
-            <h2 class="section-title">Features That Would Make Stasi Jealous</h2>
+            <h2 class="section-title">POC Architecture: What Your Camera Data Contains</h2>
             
             <div class="features-grid">
                 <div class="feature-card">
                     <span class="feature-icon">📸</span>
-                    <h3 class="feature-title">1. Person Detection & Capture</h3>
+                    <h3 class="feature-title">1. Real-Time Detection</h3>
                     <p class="feature-description">
-                        YOLO v8 monitors 1920x1080 RTSP stream with 80% confidence threshold. 
-                        When a person is detected, system captures full-frame image with bounding box 
-                        and saves original high-quality photo to disk. This saves a still image of everyone who passes the house.
+                        YOLO v8 processes live RTSP video feed with configurable confidence threshold. 
+                        When a person is detected, the system captures high-resolution images with 
+                        boundary box annotations. Demonstrates continuous AI monitoring of existing camera infrastructure.
                     </p>
-                    <p class="sarcasm-note">Because humans can't monitor video feeds 24/7 but AI can</p>
                 </div>
                 
                 <div class="feature-card">
                     <span class="feature-icon">🔍</span>
-                    <h3 class="feature-title">2. AI Pre-screening</h3>
+                    <h3 class="feature-title">2. Image Quality Assessment</h3>
                     <p class="feature-description">
-                        GPT-4.1-mini receives the captured image and determines if person is 
-                        clearly identifiable. Returns confidence level and description. 
-                        If person isn't recognizable, image is deleted. If identifiable, 
-                        proceeds to comprehensive analysis.
+                        GPT-4.1 Vision API analyzes captured images to determine if people are 
+                        clearly identifiable before processing. This quality gate ensures only 
+                        usable images proceed to full analysis, demonstrating AI-powered data filtering.
                     </p>
-                    <p class="sarcasm-note">Quality control before the real profiling begins</p>
                 </div>
                 
                 <div class="feature-card">
                     <span class="feature-icon">🧠</span>
-                    <h3 class="feature-title">3. Comprehensive Analysis</h3>
+                    <h3 class="feature-title">3. Structured Data Extraction</h3>
                     <p class="feature-description">
-                        Single GPT-4.1-mini call with context analyzes: 
-                        nickname, physical description, clothing, purpose, demeanor, notable features, 
-                        and 2-3 sentence summary. Assumes normal neighborhood activities, 
-                        no "suspicious" behavior nonsense.
+                        GPT-4.1 Vision API generates structured profiles from images including 
+                        descriptive nicknames, physical characteristics, clothing, and behavioral context. 
+                        Demonstrates how modern AI can extract meaningful data from unstructured visual content.
                     </p>
-                    <p class="sarcasm-note">Turning computer vision into friendly neighborhood intelligence</p>
                 </div>
                 
                 <div class="feature-card">
                     <span class="feature-icon">📈</span>
-                    <h3 class="feature-title">4. Profile Creation & Timeline</h3>
+                    <h3 class="feature-title">4. Persistent Intelligence</h3>
                     <p class="feature-description">
-                        System creates/updates person profile with AI analysis, stores image paths, 
-                        and updates timeline dashboard. Each person gets nickname, visit count, 
-                        and comprehensive analysis visible on hover. All data persists locally.
+                        System maintains person profiles with visit tracking, pattern recognition, and 
+                        comprehensive timeline visualization. Demonstrates how AI can build persistent 
+                        intelligence from continuous data streams while keeping all processing local.
                     </p>
-                    <p class="sarcasm-note">Finding signal in the noise of everyday foot traffic</p>
                 </div>
             </div>
         </div>
@@ -805,77 +1129,227 @@
 
     <section class="tech-specs">
         <div class="container">
-            <h2 class="section-title" style="color: #fff;">Technical Specifications</h2>
+            <h2 class="section-title" style="color: #fff;">POC Technical Architecture</h2>
             <p style="text-align: center; color: #ccc; margin-bottom: 40px;">
-                <em>Or: How We Turned Your Doorbell Into a Dystopian Nightmare</em>
+                <em>Demonstrating What Local AI Analysis Can Extract From Existing Camera Data</em>
             </p>
             
             <div class="tech-grid">
                 <div class="tech-item">
-                    <div class="tech-label">YOLO DETECTION</div>
+                    <div class="tech-label">RTSP STREAM INTEGRATION</div>
                     <div class="tech-description">
-                        Real-time object detection that treats every human as a potential threat. 
+                        Direct integration with existing camera infrastructure - no cloud required.
+                        Demonstrates what's possible with local data processing.
                     </div>
                 </div>
                 
                 <div class="tech-item">
-                    <div class="tech-label">GPT-4O-MINI VISION</div>
+                    <div class="tech-label">AI VISION ANALYSIS</div>
                     <div class="tech-description">
-                        Streamlined 2-API-call system with Philadelphia context. Pre-screening + comprehensive 
-                        analysis for efficient neighborhood profiling. No more 9-call overkill!
+                        GPT-4.1 processes captured images for comprehensive person analysis.
+                        Demonstrates how modern AI APIs can extract structured data from surveillance feeds.
                     </div>
                 </div>
                 
                 <div class="tech-item">
-                    <div class="tech-label">ORIGINAL IMAGE QUALITY</div>
+                    <div class="tech-label">YOLO v8 DETECTION</div>
                     <div class="tech-description">
-                        No more black enhanced images! System saves original 1920x1080 captures 
-                        for clear AI analysis and timeline display.
+                        Real-time person detection with configurable confidence thresholds.
+                        Shows how computer vision can process continuous video streams.
                     </div>
                 </div>
                 
                 <div class="tech-item">
-                    <div class="tech-label">RTSP STREAMING</div>
+                    <div class="tech-label">PERSON PROFILING</div>
                     <div class="tech-description">
-                        H.264 video processing ensures no moment of human dignity 
-                        goes unrecorded or unanalyzed by our benevolent AI overlords.
+                        AI generates nicknames, descriptions, and behavioral analysis for each detected person.
+                        Creates persistent profiles with visit tracking and pattern recognition.
                     </div>
                 </div>
                 
                 <div class="tech-item">
-                    <div class="tech-label">PERSISTENT STORAGE</div>
+                    <div class="tech-label">LOCAL DATA PROCESSING</div>
                     <div class="tech-description">
-                        Because the right to be forgotten is so last century. We'll remember 
-                        every time you walked past, forever and ever.
+                        All analysis happens on your hardware - no cloud dependencies.
+                        Demonstrates privacy-preserving AI surveillance capabilities.
                     </div>
                 </div>
                 
                 <div class="tech-item">
-                    <div class="tech-label">PATTERN RECOGNITION</div>
+                    <div class="tech-label">SCALABLE ARCHITECTURE</div>
                     <div class="tech-description">
-                        Machine learning that finds sinister patterns in innocent routines. 
-                        "Subject exhibits suspicious regularity in mail delivery monitoring."
+                        FastAPI backend with real-time processing pipeline.
+                        POC designed for easy deployment and customization.
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
+    <section class="use-cases-section">
+        <div class="container">
+            <h2 class="section-title">Real-World Applications</h2>
+            <p style="text-align: center; color: #666; margin-bottom: 40px;">
+                <em>What Your Doorbell Camera Data Could Tell You (If You Asked The Right Questions)</em>
+            </p>
+            
+            <div class="use-cases-grid">
+                <div class="use-case-card">
+                    <span class="use-case-icon">🚗</span>
+                    <h3 class="use-case-title">Smart Parking Alerts</h3>
+                    <p class="use-case-description">
+                        Monitor street parking patterns and get notified when spaces open up. Track parking authority schedules and meter enforcement patterns to optimize your parking strategy.
+                    </p>
+                    <div class="use-case-benefit">
+                        Never circle the block again. AI learns when your neighbors leave for work, when spots typically open, and when parking enforcement is most active.
+                    </div>
+                </div>
+                
+                <div class="use-case-card">
+                    <span class="use-case-icon">🚚</span>
+                    <h3 class="use-case-title">Delivery Intelligence</h3>
+                    <p class="use-case-description">
+                        Track delivery patterns, postal service schedules, and package carrier behavior. Know when your packages typically arrive and identify potential delivery issues before they happen.
+                    </p>
+                    <div class="use-case-benefit">
+                        Reduce missed deliveries by 90%. System learns your carrier's typical timing and can predict delivery windows with high accuracy.
+                    </div>
+                </div>
+                
+                <div class="use-case-card">
+                    <span class="use-case-icon">🏃</span>
+                    <h3 class="use-case-title">Neighborhood Security</h3>
+                    <p class="use-case-description">
+                        Identify unusual patterns, track repeat visitors, and monitor foot traffic anomalies. Build a comprehensive picture of your neighborhood's normal activity baseline.
+                    </p>
+                    <div class="use-case-benefit">
+                        Early detection of suspicious activity. AI recognizes when someone doesn't belong or when normal patterns are disrupted.
+                    </div>
+                </div>
+                
+                <div class="use-case-card">
+                    <span class="use-case-icon">📊</span>
+                    <h3 class="use-case-title">Community Analytics</h3>
+                    <p class="use-case-description">
+                        Understand pedestrian traffic flows, peak activity times, and seasonal patterns. Generate insights about your neighborhood's rhythm and social dynamics.
+                    </p>
+                    <div class="use-case-benefit">
+                        Make data-driven decisions about your home and neighborhood. Understand property value factors and community engagement levels.
+                    </div>
+                </div>
+                
+                <div class="use-case-card">
+                    <span class="use-case-icon">🚨</span>
+                    <h3 class="use-case-title">Emergency Response</h3>
+                    <p class="use-case-description">
+                        Detect emergency vehicles, unusual crowd formations, or rapid changes in neighborhood activity. Provide early warning for potential safety concerns.
+                    </p>
+                    <div class="use-case-benefit">
+                        Be the first to know about neighborhood emergencies. AI can detect patterns that human observers might miss during critical situations.
+                    </div>
+                </div>
+                
+                <div class="use-case-card">
+                    <span class="use-case-icon">🏠</span>
+                    <h3 class="use-case-title">Property Intelligence</h3>
+                    <p class="use-case-description">
+                        Track maintenance crews, service visits, and contractor schedules. Monitor property-related activity and identify optimal times for home improvements or maintenance.
+                    </p>
+                    <div class="use-case-benefit">
+                        Optimize your home's maintenance schedule. Know when neighbors do repairs, when services are available, and plan accordingly.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="surveillance-reality">
+        <div class="reality-content">
+            <h2 class="reality-title">The Surveillance Reality Check</h2>
+            <p class="reality-text">
+                This POC demonstrates what local AI analysis can extract from standard doorbell camera footage. 
+                If a weekend coding project can generate this level of insight, imagine what Ring (Amazon), 
+                Nest (Google), and other cloud-based systems already know about your neighborhood.
+            </p>
+        </div>
+    </section>
+
+    <section class="legal-section">
+        <div class="legal-content">
+            <div class="legal-text">
+                <h3>Your Right to Privacy in Public Spaces</h3>
+                <p>
+                    While this project demonstrates AI surveillance capabilities, it's important to understand 
+                    the legal framework surrounding privacy in public spaces and residential areas.
+                </p>
+                <p>
+                    In most jurisdictions, there is <strong>no expectation of privacy</strong> in public spaces 
+                    visible from public property. However, the use of AI for automated analysis and long-term 
+                    tracking raises new legal and ethical questions.
+                </p>
+                <div class="legal-highlight">
+                    This POC operates entirely on your own property, analyzing footage from your own camera, 
+                    for your own use.
+                </div>
+                <p>
+                    The legal landscape around AI surveillance is rapidly evolving. Several cities and states 
+                    are implementing restrictions on automated surveillance systems, facial recognition, and 
+                    predictive policing technologies.
+                </p>
+            </div>
+            
+            <div class="legal-facts">
+                <h3>Legal Considerations</h3>
+                
+                <div class="legal-fact-item">
+                    <strong>Public vs. Private:</strong> You can record what's visible from your property, but 
+                    cannot point cameras at neighbors' private spaces like backyards or windows.
+                </div>
+                
+                <div class="legal-fact-item">
+                    <strong>Data Retention:</strong> Consider implementing automatic deletion of old footage. 
+                    Long-term storage of identifiable information may have legal implications.
+                </div>
+                
+                <div class="legal-fact-item">
+                    <strong>Commercial Use:</strong> Using surveillance data for commercial purposes (like 
+                    selling insights) may require additional legal considerations and permissions.
+                </div>
+                
+                <div class="legal-fact-item">
+                    <strong>Disclosure:</strong> Some jurisdictions require disclosure of surveillance systems. 
+                    Check local laws about signage and notification requirements.
+                </div>
+                
+                <div class="legal-fact-item">
+                    <strong>AI Bias:</strong> Automated systems can exhibit bias. Consider the ethical 
+                    implications of AI-powered surveillance and pattern recognition.
+                </div>
+            </div>
+            
+            <div class="legal-disclaimer">
+                This information is for educational purposes only and does not constitute legal advice. 
+                Consult with a legal professional before implementing any surveillance system. 
+                Laws vary significantly by jurisdiction and are constantly evolving.
+            </div>
+        </div>
+    </section>
+
     <section class="disclaimer">
         <div class="disclaimer-text">
-            WARNING: This system may cause chronic paranoia, neighborhood disputes, and an overwhelming 
-            sense that everyone is plotting against you. Side effects include: loss of faith in humanity, 
-            compulsive curtain-twitching, and the urge to profile your own reflection.
+            TECHNICAL DEMONSTRATION: This POC shows what local AI analysis can extract from existing camera 
+            infrastructure. If a weekend project can do this, consider what Ring, Nest, and other cloud-based 
+            systems already know about your neighborhood. All processing in this demo runs locally on your hardware.
         </div>
     </section>
 
     <footer class="footer-art">
         <div class="footer-content">
-            <p><strong>WatchPost AI</strong> - Surveillance Capitalism for the Masses</p>
-            <p>Proudly destroying community trust, one doorbell at a time</p>
+            <p><strong>DoorBell-antir</strong> - A Proof of Concept for Local Surveillance Intelligence</p>
+            <p>Demonstrating what your camera data contains and what local AI analysis can extract</p>
             <p class="artist-signature">
-                A satirical commentary on surveillance culture by Daniel Nakhla<br>
-                <em>AI/ML Engineer & Occasional Voice of Reason</em>
+                A technical demonstration and surveillance reality check by Daniel Nakhla<br>
+                <em>AI/ML Engineer & Privacy Advocate</em>
             </p>
         </div>
     </footer>

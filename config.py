@@ -12,19 +12,19 @@ class Config:
     DATABASE_DIR: str = "database"
     
     # Detection settings - More aggressive capture
-    CONFIDENCE_THRESHOLD: float = 0.60  # 80% confidence threshold for highest quality detections
+    CONFIDENCE_THRESHOLD: float = 0.75  # 80% confidence threshold for highest quality detections
     PERSON_DETECTION_COOLDOWN: int = 2  # Faster capture rate
     CAPTURE_MULTIPLE_ANGLES: bool = True  # Capture multiple shots per person
     
     # Clustering settings
-    SIMILARITY_THRESHOLD: float = 0.7
+    SIMILARITY_THRESHOLD: float = 0.92  # Higher threshold for more precise person matching
     MIN_IMAGES_FOR_CLUSTER: int = 2
     
     # AI settings
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
     
     # Performance settings
-    MAX_PEOPLE_IN_MEMORY: int = 1000
+    MAX_PEOPLE_IN_MEMORY: int = 100
     IMAGE_RESIZE_HEIGHT: int = 640  # Standard YOLO input size
     CAPTURE_RESOLUTION_WIDTH: int = 1920  # High-res capture
     CAPTURE_RESOLUTION_HEIGHT: int = 1080  # High-res capture

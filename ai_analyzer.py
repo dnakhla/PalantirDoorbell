@@ -20,6 +20,102 @@ class AIAnalyzer:
         if not self.api_key:
             logger.warning("OpenAI API key not found. AI descriptions will be disabled.")
     
+    def analyze_person_sequence(self, image_paths: List[str], timestamps: List[str]) -> Dict[str, Any]:
+        """Analyze all images of a person together with temporal context"""
+        if not self.api_key:
+            logger.error("❌ AI analysis unavailable - no OpenAI API key configured")
+            return {"error": "AI analysis unavailable (no API key)"}
+        
+        if not image_paths:
+            return {"error": "No images provided"}
+        
+        logger.info(f"🧠 Starting sequence analysis for {len(image_paths)} images")
+        
+        # Encode all images
+        encoded_images = []
+        for image_path in image_paths:
+            encoded_image = self._encode_image(image_path)
+            if encoded_image:
+                encoded_images.append(encoded_image)
+        
+        if not encoded_images:
+            return {"error": "Failed to process images"}
+        
+        # Create message content with all images
+        content = [
+            {
+                "type": "text",
+                "text": f"""This person was detected by my doorbell security camera in Philadelphia (19123) across {len(encoded_images)} images. This is a residential doorbell camera monitoring the front door/entrance area.
+
+CONTEXT: This camera typically captures:
+- Package deliveries (Amazon, UPS, FedEx, USPS)
+- Visitors and guests approaching the door
+- Homeowners and family members coming/going
+- Neighbors walking by on sidewalk
+- Service providers (maintenance, contractors, etc.)
+- Solicitors and door-to-door sales people
+
+Analyze all images together and provide a concise assessment. Return JSON:
+
+{{
+  "nickname": "short identifier based on appearance (e.g., 'UPS Driver', 'Blue Jacket Walker', 'Neighbor')",
+  "description": "concise physical description and clothing",
+  "gender": "male/female/unknown based on visual appearance",
+  "skin_tone": "light/medium/dark/unknown based on visible skin",
+  "activity": "what they're doing (delivering packages, visiting, walking by, approaching door, etc.)",
+  "threat_level": "low/medium/high (consider normal door activity vs suspicious behavior)",
+  "pattern": "observed behavior pattern across images (repeated visits, delivery pattern, etc.)",
+  "summary": "one sentence assessment considering typical doorbell camera context"
+}}
+
+Focus on what you can observe across all images. Be factual and concise. Consider this is normal residential door activity unless clearly suspicious."""
+            }
+        ]
+        
+        # Add all images to the message
+        for i, encoded_image in enumerate(encoded_images):
+            content.append({
+                "type": "image_url",
+                "image_url": {"url": f"data:image/jpeg;base64,{encoded_image}"}
+            })
+        
+        payload = {
+            "model": "gpt-4o-mini",
+            "messages": [{
+                "role": "user",
+                "content": content
+            }],
+            "response_format": {"type": "json_object"},
+            "max_tokens": 300
+        }
+        
+        try:
+            logger.info("🏷️ Calling OpenAI API for sequence analysis...")
+            response = requests.post(
+                "https://api.openai.com/v1/chat/completions",
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {self.api_key}"
+                },
+                json=payload,
+                timeout=30
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                raw_content = result["choices"][0]["message"]["content"]
+                logger.info(f"🔍 Raw Sequence Analysis Response: {raw_content}")
+                analysis_result = json.loads(raw_content)
+                logger.info(f"✅ Sequence Analysis: {analysis_result}")
+                return {"comprehensive_analysis": analysis_result}
+            else:
+                logger.error(f"❌ OpenAI API Error in sequence analysis: {response.status_code} - {response.text}")
+                return {"error": "Sequence analysis failed"}
+                
+        except Exception as e:
+            logger.error(f"Error in sequence analysis: {e}")
+            return {"error": "Sequence analysis error"}
+
     def comprehensive_person_analysis(self, image_path: str) -> Dict[str, Any]:
         """Run multiple comprehensive AI analyses on a person"""
         if not self.api_key:
@@ -127,23 +223,25 @@ Requirements for "identifiable" (BE LENIENT - enhanced image processing):
                     "content": [
                         {
                             "type": "text",
-                            "text": """This is a doorbell camera image from my house in Philadelphia (19123). Analyze this person and provide a comprehensive but friendly description. Return JSON:
+                            "text": """This is a doorbell camera image from my house in Philadelphia (19123). Analyze what you see in this specific image and provide a concise, factual description. Return JSON:
 
 {
-  "nickname": "short, memorable name based on appearance (e.g., 'Blue Shirt Guy', 'Tall Walker', 'Backpack Woman')",
-  "physical_description": "brief description of height, build, hair, age, appearance",
-  "clothing_style": "description of what they're wearing",
-  "purpose": "likely reason for being here (delivery, visitor, resident, walking by, etc.)",
-  "demeanor": "overall impression of their body language and behavior",
+  "nickname": "short, memorable name based on visual appearance (e.g., 'Blue Jacket', 'Tall Person', 'Backpack Walker')",
+  "physical_description": "what you can see: height, build, hair, clothing colors",
+  "clothing_style": "specific items visible: colors, types of clothing, accessories",
+  "gender": "male/female/unknown based on visible appearance",
+  "skin_tone": "light/medium/dark/unknown based on visible skin",
+  "purpose": "likely reason based on what's visible (delivery, walking, visiting, etc.)",
+  "demeanor": "body language and posture in this image",
   "notable_features": [
-    "distinctive feature 1",
-    "distinctive feature 2",
-    "distinctive feature 3"
+    "distinct visual detail 1",
+    "distinct visual detail 2", 
+    "distinct visual detail 3"
   ],
-  "summary": "2-3 sentence friendly summary of who this person appears to be"
+  "summary": "One concise sentence describing what you see in this image"
 }
 
-Focus on helpful identification details. This is a residential neighborhood, so assume normal, everyday activities. No need to mention threats or suspicious behavior."""
+Focus only on what's visible in this specific image. Be factual and concise. Don't speculate about personality or make assumptions beyond what you can see."""
                         },
                         {
                             "type": "image_url",

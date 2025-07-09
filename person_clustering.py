@@ -172,6 +172,9 @@ class PersonClustering:
         detection.image_path = image_path
         
         logger.info(f"Added detection to profile {profile_id}")
+        
+        # Return the updated profile for potential re-analysis
+        return profile
     
     def get_all_profiles(self) -> List[PersonProfile]:
         """Get all person profiles"""
