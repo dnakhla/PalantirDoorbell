@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WatchPost AI - Surveillance Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background: #f8f8f8;
+            color: #333;
+            font-size: 16px;
+            line-height: 1.6;
+            position: relative;
+        }
+        
+        /* Satirical overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(255, 0, 0, 0.02) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(0, 0, 0, 0.03) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .street-art-header {
+            background: #fff;
+            padding: 15px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .street-art-header::before {
+            content: 'BIG BROTHER\'S WATCHING!';
+            position: absolute;
+            top: 22px;
+            left: 130px;
+            font-size: 12px;
+            color: #ff0000;
+            font-weight: 900;
+            transform: rotate(-15deg);
+            font-family: 'Courier New', monospace;
+        }
+        
+        .header-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .logo {
+            font-size: 20px;
+            font-weight: 900;
+            color: #000;
+            text-decoration: none;
+            position: relative;
+        }
+        
+        .logo::after {
+            content: '👁️';
+            position: absolute;
+            top: -5px;
+            right: -25px;
+            font-size: 16px;
+            animation: blink 2s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 90% { opacity: 1; }
+            95% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+        
+        .status-bar {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .warning-ticker {
+            background: #ff0000;
+            color: #fff;
+            padding: 5px 0;
+            overflow: hidden;
+            white-space: nowrap;
+            font-size: 12px;
+            border-bottom: 3px solid #000;
+            border-top: 3px solid #000;
+        }
+        
+        .ticker-text {
+            display: inline-block;
+            animation: scroll 25s linear infinite;
+            font-weight: 700;
+        }
+        
+        @keyframes scroll {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+        
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 30px;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .surveillance-feed {
+            background: #fff;
+            border: 3px solid #000;
+            position: relative;
+            margin-bottom: 30px;
+        }
+        
+        .surveillance-feed::before {
+            content: 'LIVE SURVEILLANCE FEED';
+            position: absolute;
+            top: -15px;
+            left: 20px;
+            background: #ff0000;
+            color: #fff;
+            padding: 0 15px;
+            font-size: 12px;
+            font-weight: 700;
+            transform: rotate(-1deg);
+        }
+        
+        .feed-container {
+            width: 100%;
+            height: 600px;
+            background: #000;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid #333;
+        }
+        
+        .feed-container::before {
+            content: 'PRIVACY VIOLATION IN PROGRESS';
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: #ff0000;
+            font-size: 11px;
+            font-weight: 700;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 3px 8px;
+            animation: blink 1s infinite;
+            z-index: 10;
+        }
+        
+        .feed-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: grayscale(20%) contrast(1.1);
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: optimize-contrast;
+        }
+        
+        .feed-overlay {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 700;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 3px 8px;
+            z-index: 10;
+        }
+        
+        .crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80px;
+            height: 80px;
+            border: 2px solid #ff0000;
+            opacity: 0.6;
+            z-index: 5;
+        }
+        
+        .crosshair::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: #ff0000;
+            transform: translateY(-50%);
+        }
+        
+        .crosshair::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            width: 2px;
+            height: 100%;
+            background: #ff0000;
+            transform: translateX(-50%);
+        }
+        
+        
+        .timeline-section {
+            background: #fff;
+            border: 2px solid #000;
+            position: relative;
+            padding: 20px;
+        }
+        
+        .timeline-section::before {
+            content: 'SURVEILLANCE TIMELINE';
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: #000;
+            color: #fff;
+            padding: 0 15px;
+            font-size: 12px;
+            font-weight: 700;
+            transform: rotate(1deg);
+        }
+        
+        .timeline-section::after {
+            content: 'EVIDENCE COLLECTED';
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 10px;
+            color: #ccc;
+            font-weight: 700;
+            transform: rotate(-10deg);
+        }
+        
+        .timeline-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+            min-width: 100%;
+        }
+        
+        .timeline-item {
+            position: relative;
+            background: #f8f8f8;
+            border: 2px solid #333;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .timeline-item:hover {
+            transform: rotate(2deg) scale(1.05);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .timeline-item img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            filter: grayscale(50%) contrast(1.1);
+        }
+        
+        .timeline-timestamp {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            font-size: 10px;
+            padding: 2px 5px;
+            text-align: center;
+        }
+        
+        .threat-indicator {
+            position: absolute;
+            top: 3px;
+            right: 3px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 2px solid #fff;
+        }
+        
+        .threat-low { background: #00aa00; }
+        .threat-medium { background: #ffaa00; }
+        .threat-high { background: #ff0000; animation: pulse 1s infinite; }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .analysis-panel {
+            background: #fff;
+            border: 2px dashed #ff0000;
+            padding: 20px;
+            position: relative;
+            transform: rotate(-0.5deg);
+        }
+        
+        .analysis-panel::before {
+            content: '24H PARANOIA REPORT';
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: #ff0000;
+            color: #fff;
+            padding: 0 15px;
+            font-size: 12px;
+            font-weight: 700;
+            transform: rotate(1deg);
+        }
+        
+        .analysis-title {
+            font-size: 18px;
+            font-weight: 900;
+            margin-bottom: 15px;
+            color: #000;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-item {
+            background: #f8f8f8;
+            border: 1px solid #333;
+            padding: 15px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .stat-number {
+            font-size: 24px;
+            font-weight: 900;
+            color: #ff0000;
+            display: block;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            margin-top: 5px;
+        }
+        
+        .activity-log {
+            background: #f8f8f8;
+            border: 1px solid #333;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        
+        .activity-log h4 {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #000;
+        }
+        
+        .activity-item {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+            position: relative;
+            padding-left: 15px;
+        }
+        
+        .activity-item::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: #ff0000;
+            font-weight: 700;
+        }
+        
+        .hover-analysis {
+            position: absolute;
+            background: #fff;
+            border: 3px solid #000;
+            padding: 20px;
+            min-width: 300px;
+            max-width: 400px;
+            z-index: 1000;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            display: none;
+            transform: rotate(-1deg);
+        }
+        
+        .hover-analysis::before {
+            content: 'SUBJECT ANALYSIS';
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: #000;
+            color: #fff;
+            padding: 0 15px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        
+        .analysis-image {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border: 2px solid #333;
+            margin-bottom: 15px;
+            filter: grayscale(30%) contrast(1.1);
+        }
+        
+        .analysis-content h3 {
+            font-size: 16px;
+            font-weight: 900;
+            margin-bottom: 10px;
+            color: #000;
+        }
+        
+        .analysis-detail {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+        
+        .analysis-detail strong {
+            color: #000;
+        }
+        
+        .subject-gallery {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
+            margin-top: 15px;
+        }
+        
+        .subject-gallery img {
+            width: 100%;
+            height: 60px;
+            object-fit: cover;
+            border: 1px solid #333;
+            filter: grayscale(50%);
+        }
+        
+        .sarcasm-note {
+            font-size: 10px;
+            color: #999;
+            font-style: italic;
+            margin-top: 10px;
+            text-align: center;
+        }
+        
+        .sarcasm-note::before {
+            content: '* ';
+            color: #ff0000;
+        }
+        
+        .loading-timeline {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            padding: 40px;
+            min-width: 50rem;
+        }
+        
+        .loading-timeline::before {
+            content: 'SCANNING FOR SUSPICIOUS ACTIVITY...';
+            display: block;
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        @media (max-width: 1200px) {
+            .main-container {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .sidebar {
+                order: -1;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .timeline-grid {
+                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+                gap: 10px;
+            }
+            
+            .feed-container {
+                height: 250px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="street-art-header">
+        <div class="header-container">
+            <a href="/" class="logo">WatchPost AI</a>
+            <div class="status-bar">
+                <span id="subject-count">0 SUBJECTS UNDER SURVEILLANCE</span>
+                <span id="current-time"></span>
+            </div>
+        </div>
+    </header>
+    
+    <div class="warning-ticker">
+        <div class="ticker-text">
+            🚨 PRIVACY IS THEFT • TRUST NO ONE • EVERYONE IS SUSPICIOUS • NORMALIZE SURVEILLANCE • 
+        </div>
+    </div>
+    
+    <div class="main-container">
+        <main class="surveillance-main">
+            <div class="surveillance-feed">
+                <div class="feed-container">
+                    <img src="/api/video_feed" alt="Live surveillance feed">
+                    <div class="feed-overlay" id="live-timestamp">LIVE</div>
+                    <!-- <div class="crosshair"></div> -->
+                </div>
+                
+            </div>
+            
+            <div class="timeline-section">
+                <div id="timeline-container">
+                    <div class="timeline-grid" id="timeline-grid">
+                        <div class="loading-timeline">
+                            Collecting evidence of human existence...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <aside class="sidebar">
+            <div class="analysis-panel">
+                <h2 class="analysis-title">Dystopian Analytics</h2>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-number" id="total-subjects">0</span>
+                        <div class="stat-label">Subjects Catalogued</div>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number" id="threat-count">0</span>
+                        <div class="stat-label">Invented Threats</div>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number" id="privacy-violations">0</span>
+                        <div class="stat-label">Privacy Violations</div>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number" id="ai-analyses">0</span>
+                        <div class="stat-label">AI Judgments</div>
+                    </div>
+                </div>
+                
+                <div class="activity-log">
+                    <h4>Suspicious Activity Log</h4>
+                    <div style="margin-bottom: 15px;">
+                        <button onclick="clearLogs()" style="background: #ff0000; color: white; border: none; padding: 5px 10px; font-size: 10px; cursor: pointer; margin-right: 10px;">CLEAR LOGS</button>
+                        <button onclick="clearTimeline()" style="background: #000; color: white; border: none; padding: 5px 10px; font-size: 10px; cursor: pointer;">CLEAR TIMELINE</button>
+                    </div>
+                    <div id="activity-list">
+                        <div class="activity-item">System initialized with 80% confidence threshold</div>
+                        <div class="activity-item">Full-screen capture with bounding boxes enabled</div>
+                        <div class="activity-item">9 AI analysis prompts loaded and ready</div>
+                        <div class="activity-item">Awaiting human subjects for profiling...</div>
+                    </div>
+                </div>
+                
+                <div class="sarcasm-note">
+                    Remember: Everyone is guilty of something
+                </div>
+            </div>
+        </aside>
+    </div>
+    
+    <!-- Hover Analysis Popup -->
+    <div class="hover-analysis" id="hover-analysis">
+        <div class="analysis-content">
+            <img class="analysis-image" id="analysis-image" src="" alt="Subject">
+            <h3 id="analysis-title">Subject Analysis</h3>
+            <div class="analysis-detail"><strong>Analysis:</strong> <span id="ai-paranoia">Loading...</span></div>
+            <div class="analysis-detail"><strong>Times Spotted:</strong> <span id="detection-count">1</span></div>
+            
+            <div class="subject-gallery" id="subject-gallery">
+                <!-- Subject images will be populated here -->
+            </div>
+            
+            <div class="sarcasm-note">
+                AI-generated paranoia for your viewing pleasure
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let timelineData = [];
+        let currentSubjects = new Map();
+        
+        // Update time
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('current-time').textContent = now.toLocaleTimeString();
+            document.getElementById('live-timestamp').textContent = now.toLocaleTimeString();
+        }
+        
+        // Load surveillance data
+        async function loadSurveillanceData() {
+            try {
+                const response = await fetch('/api/profiles');
+                const profiles = await response.json();
+                
+                // Process profiles into timeline data
+                timelineData = [];
+                profiles.forEach(profile => {
+                    profile.images.forEach((image, index) => {
+                        // Extract AI analysis from simplified structure
+                        let analysisText = "Analysis pending...";
+                        if (profile.ai_analysis && profile.ai_analysis.comprehensive_analysis) {
+                            if (profile.ai_analysis.comprehensive_analysis.summary) {
+                                analysisText = profile.ai_analysis.comprehensive_analysis.summary;
+                            } else if (profile.ai_analysis.comprehensive_analysis.nickname) {
+                                analysisText = profile.ai_analysis.comprehensive_analysis.nickname;
+                            }
+                        }
+                        
+                        timelineData.push({
+                            id: profile.id,
+                            image: image,
+                            timestamp: new Date(profile.last_seen),
+                            threatLevel: getThreatLevel(profile.description),
+                            analysis: analysisText,
+                            detectionCount: profile.total_appearances || 1,
+                            allImages: profile.images
+                        });
+                    });
+                });
+                
+                // Sort by timestamp (newest first)
+                timelineData.sort((a, b) => b.timestamp - a.timestamp);
+                
+                updateStats();
+                renderTimeline();
+                
+            } catch (error) {
+                console.error('Error loading surveillance data:', error);
+            }
+        }
+        
+        function getThreatLevel(description) {
+            if (!description) return 'medium';
+            const desc = description.toLowerCase();
+            if (desc.includes('suspicious') || desc.includes('threat')) return 'high';
+            if (desc.includes('unknown')) return 'medium';
+            return 'low';
+        }
+        
+        function generateSarcasticAnalysis() {
+            const analyses = [
+                "Subject displays alarming tendency to exist in public spaces",
+                "Individual exhibits suspicious bipedal locomotion patterns",
+                "Person demonstrates concerning ability to breathe oxygen",
+                "Subject shows signs of having a face (potential identification risk)",
+                "Individual appears to be wearing clothes (hiding something?)",
+                "Person exhibits dangerous awareness of surroundings"
+            ];
+            return analyses[Math.floor(Math.random() * analyses.length)];
+        }
+        
+        function updateStats() {
+            const uniqueSubjects = new Set(timelineData.map(item => item.id)).size;
+            const threatCount = timelineData.filter(item => item.threatLevel === 'high').length;
+            
+            document.getElementById('total-subjects').textContent = uniqueSubjects;
+            document.getElementById('threat-count').textContent = threatCount;
+            document.getElementById('privacy-violations').textContent = timelineData.length;
+            document.getElementById('ai-analyses').textContent = uniqueSubjects * 2;
+            document.getElementById('subject-count').textContent = `${uniqueSubjects} SUBJECTS UNDER SURVEILLANCE`;
+        }
+        
+        function renderTimeline() {
+            const timelineGrid = document.getElementById('timeline-grid');
+            
+            if (timelineData.length === 0) {
+                timelineGrid.innerHTML = `
+                    <div class="loading-timeline">
+                        <div style="text-align: center; padding: 60px 20px;">
+                            <div style="font-size: 48px; margin-bottom: 20px;">👁️</div>
+                            <div style="font-size: 18px; font-weight: 700; margin-bottom: 10px;">AWAITING HUMAN SUBJECTS</div>
+                            <div style="font-size: 14px; color: #666; margin-bottom: 20px;">
+                                System armed with 80% confidence threshold<br>
+                                Full-screen capture with bounding boxes enabled<br>
+                                2 AI analysis prompts ready for deployment
+                            </div>
+                            <div style="font-size: 12px; color: #999; font-style: italic;">
+                                Walk past the camera to initiate comprehensive profiling...
+                            </div>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+            
+            timelineGrid.innerHTML = timelineData.map(item => `
+                <div class="timeline-item" 
+                     data-id="${item.id}"
+                     data-analysis="${item.analysis}"
+                     data-threat="${item.threatLevel}"
+                     data-count="${item.detectionCount}"
+                     data-images="${item.allImages.join(',')}"
+                     onmouseenter="showAnalysis(event, this)"
+                     onmouseleave="hideAnalysis()">
+                    <img src="/images/${item.image.split('/').pop()}" alt="Subject ${item.id}" 
+                         onerror="this.src='/static/placeholder.jpg'">
+                    <div class="timeline-timestamp">${item.timestamp.toLocaleTimeString()}</div>
+                    <div class="threat-indicator threat-${item.threatLevel}"></div>
+                </div>
+            `).join('');
+        }
+        
+        function showAnalysis(event, element) {
+            const analysisPopup = document.getElementById('hover-analysis');
+            const rect = element.getBoundingClientRect();
+            
+            // Position popup
+            analysisPopup.style.left = (rect.right + 10) + 'px';
+            analysisPopup.style.top = rect.top + 'px';
+            
+            // Get profile data
+            const profileId = element.dataset.id;
+            const profile = timelineData.find(item => item.id === profileId);
+            
+            // Populate content
+            const mainImage = element.querySelector('img').src;
+            document.getElementById('analysis-image').src = mainImage;
+            
+            // Set title to nickname if available
+            let title = `Subject ${profileId.substring(0, 8)}`;
+            if (profile && profile.analysis && profile.analysis.nickname) {
+                title = profile.analysis.nickname;
+            }
+            document.getElementById('analysis-title').textContent = title;
+            
+            // Show comprehensive analysis
+            let analysisText = element.dataset.analysis;
+            if (analysisText === '[object Object]' || analysisText === 'undefined') {
+                analysisText = 'AI analysis in progress...';
+            }
+            document.getElementById('ai-paranoia').textContent = analysisText;
+            
+            // Show visit count
+            document.getElementById('detection-count').textContent = element.dataset.count;
+            
+            // Populate subject gallery
+            const gallery = document.getElementById('subject-gallery');
+            const images = element.dataset.images.split(',').slice(0, 6);
+            gallery.innerHTML = images.map(img => 
+                `<img src="/images/${img.split('/').pop()}" alt="Subject" onerror="this.src='/static/placeholder.jpg'">`
+            ).join('');
+            
+            analysisPopup.style.display = 'block';
+        }
+        
+        function hideAnalysis() {
+            document.getElementById('hover-analysis').style.display = 'none';
+        }
+        
+        
+        // Initialize
+        updateTime();
+        setInterval(updateTime, 1000);
+        loadSurveillanceData();
+        setInterval(loadSurveillanceData, 10000); // Refresh every 10 seconds
+        
+        // Add real activity based on detections
+        function addRealActivity(profile) {
+            const activities = [
+                `Person detected with ${profile.total_appearances} appearances (TRACKED)`,
+                `Subject ${profile.id.substring(0, 8)} updated profile (INTELLIGENCE GATHERED)`,
+                `Individual analyzed with AI vision (COMPREHENSIVE PROFILING)`,
+                `Person identified at ${new Date().toLocaleTimeString()} (REAL-TIME MONITORING)`
+            ];
+            
+            const activityList = document.getElementById('activity-list');
+            const activity = activities[Math.floor(Math.random() * activities.length)];
+            
+            const newActivity = document.createElement('div');
+            newActivity.className = 'activity-item';
+            newActivity.textContent = activity;
+            
+            activityList.insertBefore(newActivity, activityList.firstChild);
+            
+            // Keep only last 5 activities
+            while (activityList.children.length > 5) {
+                activityList.removeChild(activityList.lastChild);
+            }
+        }
+        
+        // Add activity when profiles are loaded
+        function updateActivityLog() {
+            fetch('/api/profiles')
+                .then(response => response.json())
+                .then(profiles => {
+                    profiles.forEach(profile => {
+                        if (Math.random() < 0.1) { // 10% chance per profile
+                            addRealActivity(profile);
+                        }
+                    });
+                });
+        }
+        
+        setInterval(updateActivityLog, 20000); // Update every 20 seconds
+        
+        // Clear logs function
+        function clearLogs() {
+            if (confirm('Clear all activity logs?')) {
+                const activityList = document.getElementById('activity-list');
+                activityList.innerHTML = '<div class="activity-item">Logs cleared by user</div>';
+                
+                // Add confirmation activity
+                setTimeout(() => {
+                    const newActivity = document.createElement('div');
+                    newActivity.className = 'activity-item';
+                    newActivity.textContent = 'System ready for new surveillance activities';
+                    activityList.appendChild(newActivity);
+                }, 1000);
+            }
+        }
+        
+        // Clear timeline function
+        function clearTimeline() {
+            if (confirm('Clear all captured subjects from timeline? This will also clear server data.')) {
+                // Call API to clear server data
+                fetch('/api/clear-timeline', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Clear timeline display
+                        const timelineGrid = document.getElementById('timeline-grid');
+                        timelineGrid.innerHTML = `
+                            <div class="loading-timeline">
+                                <div style="text-align: center; padding: 60px 20px;">
+                                    <div style="font-size: 48px; margin-bottom: 20px;">🗑️</div>
+                                    <div style="font-size: 18px; font-weight: 700; margin-bottom: 10px;">TIMELINE CLEARED</div>
+                                    <div style="font-size: 14px; color: #666; margin-bottom: 20px;">
+                                        All subject data has been purged<br>
+                                        System ready for new surveillance operations
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        
+                        // Reset stats
+                        document.getElementById('total-subjects').textContent = '0';
+                        document.getElementById('threat-count').textContent = '0';
+                        document.getElementById('privacy-violations').textContent = '0';
+                        document.getElementById('ai-analyses').textContent = '0';
+                        document.getElementById('subject-count').textContent = '0 SUBJECTS UNDER SURVEILLANCE';
+                        
+                        // Add activity log entry
+                        const activityList = document.getElementById('activity-list');
+                        const newActivity = document.createElement('div');
+                        newActivity.className = 'activity-item';
+                        newActivity.textContent = 'Timeline cleared - all subject data purged from server';
+                        activityList.insertBefore(newActivity, activityList.firstChild);
+                        
+                        console.log('Timeline cleared successfully');
+                    } else {
+                        alert('Error clearing timeline: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error clearing timeline:', error);
+                    alert('Error clearing timeline');
+                });
+            }
+        }
+    </script>
+</body>
+</html>

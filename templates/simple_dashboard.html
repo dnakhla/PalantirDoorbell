@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neighborhood Watch AI</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: system-ui, sans-serif; background: #f5f5f5; }
+        
+        .live-feed {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 480px;
+            height: 270px;
+            background: #000;
+            border-radius: 12px;
+            z-index: 50;
+            border: 3px solid #333;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            overflow: hidden;
+            resize: both;
+            min-width: 240px;
+            min-height: 135px;
+            max-width: 800px;
+            max-height: 450px;
+            cursor: move;
+        }
+        
+        .live-feed:hover {
+            border-color: #555;
+        }
+        
+        .live-feed img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        
+        .people-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 16px;
+        }
+        
+        .person-card {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .person-card img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+        }
+        
+        .person-info {
+            padding: 12px;
+        }
+        
+        .person-name {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .person-visits {
+            color: #666;
+            font-size: 12px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <!-- Live Feed -->
+    <div class="live-feed" id="live-feed">
+        <img src="/api/video_feed" alt="Live Feed" draggable="false">
+    </div>
+
+    <!-- Main Content -->
+    <div class="container">
+        <div class="header">
+            <h1>🏘️ Neighborhood Watch AI</h1>
+            <p><span id="people-count">0</span> people monitored • Intelligence-powered surveillance</p>
+        </div>
+
+        <!-- People Grid -->
+        <div class="people-grid" id="people-grid"></div>
+
+        <!-- Empty State -->
+        <div class="empty-state" id="empty-state">
+            <div>🔍</div>
+            <h2>Monitoring for people...</h2>
+            <p>AI surveillance active</p>
+        </div>
+    </div>
+
+    <script>
+        let people = [];
+        
+        function updateGrid() {
+            const grid = document.getElementById('people-grid');
+            const emptyState = document.getElementById('empty-state');
+            const count = document.getElementById('people-count');
+            
+            count.textContent = people.length;
+            
+            if (people.length === 0) {
+                grid.style.display = 'none';
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            grid.style.display = 'grid';
+            emptyState.style.display = 'none';
+            grid.innerHTML = '';
+            
+            people.forEach(person => {
+                const card = document.createElement('div');
+                card.className = 'person-card';
+                
+                card.innerHTML = `
+                    <img src="${person.image}" alt="${person.name}">
+                    <div class="person-info">
+                        <div class="person-name">${person.name}</div>
+                        <div class="person-visits">${person.visits} visits</div>
+                    </div>
+                `;
+                
+                grid.appendChild(card);
+            });
+        }
+        
+        function generateName(description) {
+            if (!description) return 'Person';
+            const desc = description.toLowerCase();
+            if (desc.includes('delivery')) return 'Delivery Person';
+            if (desc.includes('mail')) return 'Mail Carrier';
+            if (desc.includes('dog')) return 'Dog Walker';
+            if (desc.includes('uniform')) return 'Service Worker';
+            return 'Person';
+        }
+        
+        async function loadPeople() {
+            try {
+                const response = await fetch('/api/profiles');
+                const data = await response.json();
+                
+                people = data.map(profile => ({
+                    name: profile.name || generateName(profile.description),
+                    image: profile.images && profile.images.length > 0 
+                        ? `/images/${profile.images[profile.images.length - 1].split('/').pop()}`
+                        : '/static/placeholder.jpg',
+                    visits: profile.total_appearances
+                }));
+                
+                updateGrid();
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+        
+        loadPeople();
+        setInterval(loadPeople, 5000);
+        
+        // Make live feed draggable
+        let isDragging = false;
+        let currentX;
+        let currentY;
+        let initialX;
+        let initialY;
+        let xOffset = 0;
+        let yOffset = 0;
+        
+        const liveFeed = document.getElementById('live-feed');
+        
+        liveFeed.addEventListener('mousedown', dragStart);
+        document.addEventListener('mousemove', drag);
+        document.addEventListener('mouseup', dragEnd);
+        
+        function dragStart(e) {
+            if (e.target.tagName === 'IMG') {
+                initialX = e.clientX - xOffset;
+                initialY = e.clientY - yOffset;
+                
+                if (e.target === liveFeed.querySelector('img')) {
+                    isDragging = true;
+                    liveFeed.style.cursor = 'grabbing';
+                }
+            }
+        }
+        
+        function drag(e) {
+            if (isDragging) {
+                e.preventDefault();
+                currentX = e.clientX - initialX;
+                currentY = e.clientY - initialY;
+                
+                xOffset = currentX;
+                yOffset = currentY;
+                
+                // Keep within viewport bounds
+                const rect = liveFeed.getBoundingClientRect();
+                const maxX = window.innerWidth - rect.width;
+                const maxY = window.innerHeight - rect.height;
+                
+                currentX = Math.max(0, Math.min(currentX, maxX));
+                currentY = Math.max(0, Math.min(currentY, maxY));
+                
+                liveFeed.style.left = currentX + 'px';
+                liveFeed.style.top = currentY + 'px';
+                liveFeed.style.right = 'auto';
+            }
+        }
+        
+        function dragEnd(e) {
+            initialX = currentX;
+            initialY = currentY;
+            isDragging = false;
+            liveFeed.style.cursor = 'move';
+        }
+    </script>
+</body>
+</html>

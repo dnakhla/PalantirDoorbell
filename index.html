@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WatchPost AI - Big Brother's Little Helper</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background: #f8f8f8;
+            color: #333;
+            font-size: 16px;
+            line-height: 1.6;
+            position: relative;
+        }
+        
+        /* Graffiti-style overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(255, 0, 0, 0.02) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(0, 0, 0, 0.03) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .street-art-header {
+            background: #fff;
+            padding: 20px 0;
+            border-bottom: 3px solid #000;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .street-art-header::before {
+            content: 'SMILE! YOU\'RE ON CAMERA';
+            position: absolute;
+            top: 30px;
+            right: 20px;
+            font-size: 21px;
+            color: #ff0000;
+            font-weight: 700;
+            transform: rotate(-5deg);
+            font-family: 'Courier New', monospace;
+        }
+        
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: 900;
+            color: #000;
+            text-decoration: none;
+            position: relative;
+        }
+        
+        .logo::after {
+            content: '👁️';
+            position: absolute;
+            top: -5px;
+            right: -30px;
+            font-size: 20px;
+            animation: blink 2s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 90% { opacity: 1; }
+            95% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+        
+        .warning-ticker {
+            background: #ff0000;
+            color: #fff;
+            padding: 8px 0;
+            overflow: hidden;
+            white-space: nowrap;
+            position: relative;
+        }
+        
+        .ticker-text {
+            display: inline-block;
+            animation: scroll 30s linear infinite;
+            font-size: 14px;
+            font-weight: 700;
+        }
+        
+        @keyframes scroll {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+        
+        .hero {
+            background: linear-gradient(135deg, #f8f8f8 0%, #e8e8e8 100%);
+            padding: 60px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero::before {
+            content: 'BIG BROTHER IS WATCHING';
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) rotate(-2deg);
+            font-size: 32px;
+            color: #ccc;
+            font-weight: 700;
+            z-index: 1;
+        }
+        
+        .hero-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .hero-text h1 {
+            font-size: 48px;
+            font-weight: 900;
+            margin-bottom: 20px;
+            color: #000;
+            line-height: 1.1;
+            position: relative;
+        }
+        
+        .hero-text h1::before {
+            content: '';
+            position: absolute;
+            top: 10px;
+            left: -10px;
+            width: 120%;
+            height: 20px;
+            background: rgba(255, 255, 0, 0.3);
+            z-index: -1;
+            transform: rotate(-1deg);
+        }
+        
+        .subtitle {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 20px;
+            font-style: italic;
+        }
+        
+        .description {
+            font-size: 16px;
+            margin-bottom: 30px;
+            color: #333;
+            line-height: 1.7;
+        }
+        
+        .irony-box {
+            background: #fff;
+            border: 2px dashed #ff0000;
+            padding: 20px;
+            margin: 30px 0;
+            position: relative;
+            transform: rotate(-0.5deg);
+        }
+        
+        .irony-box::before {
+            content: 'STORY ALERT!';
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: #ff0000;
+            color: #fff;
+            padding: 0 10px;
+            font-size: 12px;
+            font-weight: 700;
+            transform: rotate(1deg);
+        }
+        
+        .cta-button {
+            background: #000;
+            color: #fff;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            position: relative;
+            transform: rotate(1deg);
+            transition: all 0.3s;
+        }
+        
+        .cta-button:hover {
+            transform: rotate(-1deg) scale(1.05);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .cta-button::after {
+            content: '(FOR LINKEDIN CLOUT)';
+            position: absolute;
+            bottom: -15px;
+            left: 0;
+            font-size: 10px;
+            color: #999;
+            font-style: italic;
+        }
+        
+        .surveillance-mockup {
+            position: relative;
+            background: #000;
+            border: 3px solid #333;
+            transform: rotate(-2deg);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .mockup-screen {
+            width: 100%;
+            height: 350px;
+            background: #000;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .mockup-screen::before {
+            content: 'NO PRIVACY ZONE';
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: #ff0000;
+            font-size: 12px;
+            font-weight: 700;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 2px 8px;
+            animation: blink 1s infinite;
+        }
+        
+        .mockup-screen img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: grayscale(100%) contrast(1.2);
+        }
+        
+        .placeholder-surveillance {
+            color: #fff;
+            font-size: 14px;
+            text-align: center;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80px;
+            height: 80px;
+            border: 2px solid #ff0000;
+            opacity: 0.7;
+        }
+        
+        .crosshair::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: #ff0000;
+            transform: translateY(-50%);
+        }
+        
+        .crosshair::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            width: 2px;
+            height: 100%;
+            background: #ff0000;
+            transform: translateX(-50%);
+        }
+        
+        .satire-section {
+            background: #fff;
+            padding: 60px 0;
+            position: relative;
+        }
+        
+        .satire-section::before {
+            content: 'ON-PREM DYSTOPIA';
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 72px;
+            color: #ccc;
+            font-weight: 700;
+            transform: rotate(15deg);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        .section-title {
+            font-size: 36px;
+            font-weight: 900;
+            text-align: center;
+            margin-bottom: 40px;
+            color: #000;
+            position: relative;
+        }
+        
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 4px;
+            background: linear-gradient(90deg, #ff0000, #ffaa00, #ff0000);
+        }
+        
+        .process-flow {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            margin-top: 40px;
+        }
+        
+        .process-step {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            background: #f8f8f8;
+            border: 2px solid #000;
+            padding: 25px;
+            position: relative;
+            transform: rotate(0.3deg);
+            transition: transform 0.3s;
+        }
+        
+        .process-step:nth-child(even) {
+            transform: rotate(-0.3deg);
+            flex-direction: row-reverse;
+        }
+        
+        .process-step:hover {
+            transform: rotate(0deg) scale(1.02);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        .step-number {
+            background: #ff0000;
+            color: #fff;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 900;
+            border: 3px solid #000;
+            flex-shrink: 0;
+            position: relative;
+        }
+        
+        .step-number::after {
+            content: '';
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            width: 20px;
+            height: 20px;
+            background: #ffaa00;
+            border-radius: 50%;
+            border: 2px solid #000;
+        }
+        
+        .step-content {
+            flex: 1;
+        }
+        
+        .step-content h3 {
+            font-size: 20px;
+            font-weight: 900;
+            margin-bottom: 10px;
+            color: #000;
+            position: relative;
+        }
+        
+        .step-content h3::before {
+            content: '';
+            position: absolute;
+            top: 5px;
+            left: -5px;
+            width: 105%;
+            height: 15px;
+            background: rgba(255, 255, 0, 0.3);
+            z-index: -1;
+            transform: rotate(-1deg);
+        }
+        
+        .step-content p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        
+        .process-arrow {
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 20px solid #ff0000;
+        }
+        
+        .process-step:last-child .process-arrow {
+            display: none;
+        }
+        
+        .process-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 30px;
+            padding: 20px;
+            background: #fff;
+            border: 2px dashed #000;
+            transform: rotate(-0.5deg);
+        }
+        
+        .stat-box {
+            text-align: center;
+            padding: 15px;
+            background: #f8f8f8;
+            border: 1px solid #333;
+            position: relative;
+        }
+        
+        .stat-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, #ff0000, #ffaa00);
+        }
+        
+        .stat-number {
+            font-size: 28px;
+            font-weight: 900;
+            color: #ff0000;
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+        
+        .feature-card {
+            background: #f8f8f8;
+            border: 2px solid #000;
+            padding: 30px;
+            position: relative;
+            transform: rotate(0.5deg);
+            transition: transform 0.3s;
+        }
+        
+        .feature-card:nth-child(even) {
+            transform: rotate(-0.5deg);
+        }
+        
+        .feature-card:hover {
+            transform: rotate(0deg) scale(1.02);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .feature-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+            display: block;
+        }
+        
+        .feature-title {
+            font-size: 24px;
+            font-weight: 900;
+            margin-bottom: 15px;
+            color: #000;
+        }
+        
+        .feature-description {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        
+        .sarcasm-note {
+            font-size: 12px;
+            color: #999;
+            font-style: italic;
+            margin-top: 10px;
+        }
+        
+        .sarcasm-note::before {
+            content: '* ';
+            color: #ff0000;
+        }
+        
+        .tech-specs {
+            background: #000;
+            color: #fff;
+            padding: 50px 0;
+            position: relative;
+        }
+        
+        .tech-specs::before {
+            content: 'POWERED BY ANXIETY';
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 32px;
+            color: #666;
+            font-weight: 700;
+        }
+        
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .tech-item {
+            background: #111;
+            border: 1px solid #333;
+            padding: 20px;
+            position: relative;
+        }
+        
+        .tech-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, #ff0000, #ffaa00);
+        }
+        
+        .tech-label {
+            color: #ffaa00;
+            font-weight: 700;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        
+        .tech-description {
+            color: #ccc;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .disclaimer {
+            background: #ff0000;
+            color: #fff;
+            padding: 30px 0;
+            text-align: center;
+            position: relative;
+        }
+        
+        .disclaimer::before {
+            content: '⚠️';
+            position: absolute;
+            top: 50%;
+            left: 20px;
+            transform: translateY(-50%);
+            font-size: 100px;
+            animation: shake 0.5s infinite;
+        }
+        
+        .disclaimer::after {
+            content: '⚠️';
+            position: absolute;
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+            font-size: 100px;
+            animation: shake 0.5s infinite reverse;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateY(-50%) rotate(0deg); }
+            25% { transform: translateY(-50%) rotate(5deg); }
+            75% { transform: translateY(-50%) rotate(-5deg); }
+        }
+        
+        .disclaimer-text {
+            font-size: 16px;
+            font-weight: 700;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        
+        .footer-art {
+            background: #f8f8f8;
+            padding: 40px 0;
+            text-align: center;
+            position: relative;
+        }
+        
+        .footer-art::before {
+            content: 'RESISTANCE IS FUTILE';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 72px;
+            color: rgba(0, 0, 0, 0.05);
+            font-weight: 900;
+            z-index: 1;
+        }
+        
+        .footer-content {
+            position: relative;
+            z-index: 2;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .artist-signature {
+            margin-top: 20px;
+            font-style: italic;
+            color: #999;
+        }
+        
+        @media (max-width: 768px) {
+            .hero-content {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+            
+            .hero-text h1 {
+                font-size: 36px;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .tech-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="street-art-header">
+        <div class="header-container">
+            <a href="#" class="logo">WatchPost AI</a>
+            <div style="font-size: 12px; color: #999;">
+                Making Orwell Proud Since 2024
+            </div>
+        </div>
+    </header>
+    
+    <div class="warning-ticker">
+        <div class="ticker-text">
+            🚨 PRIVACY SOLD SEPARATELY • YOUR DATA IS OUR PRODUCT • FREEDOM NOT INCLUDED • SERVICE SURVEILLANCE • BIG BROTHER APPROVED • 
+        </div>
+    </div>
+    
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-text">
+                <h1>WatchPost AI</h1>
+                <p class="subtitle">Because Your Doorbell Wasn't Creepy Enough</p>
+                <p class="description">
+                    I never check my doorbell camera - but what if an AI agent could watch where I wouldn't? 
+                    This project captures photos of people passing by and creates comprehensive profiles 
+                    using 2 streamlined AI analyses per person. It's my exploration into how AI can process 
+                    continuous data streams that humans simply can't monitor 24/7. 
+                </p>
+                
+                <div class="irony-box">
+                    Started with a doorbell camera I never checked. Built a system that demonstrates 
+                    AI's ability to process continuous data streams and find insights where humans 
+                    would miss them - turning passive recording into active neighborhood intelligence.
+                </div>
+                
+                <a href="https://github.com/dnakhla/PalantirDoorbell/tree/main" class="cta-button">
+                    Clone the code
+                </a>
+            </div>
+            
+            <div class="surveillance-mockup">
+                <div class="mockup-screen">
+                    <img src="screenshot.jpg" alt="Surveillance Dashboard" style="display: none;" 
+                         onload="this.style.display='block'; this.parentNode.querySelector('.placeholder-surveillance').style.display='none';">
+                    <div class="placeholder-surveillance">
+                        SUBJECT UNDER SURVEILLANCE<br>
+                        SCREENSHOT.JPG REQUIRED
+                    </div>
+                    <!-- <div class="crosshair"></div> -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="satire-section">
+        <div class="container">
+            <h2 class="section-title">Features That Would Make Stasi Jealous</h2>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <span class="feature-icon">📸</span>
+                    <h3 class="feature-title">1. Person Detection & Capture</h3>
+                    <p class="feature-description">
+                        YOLO v8 monitors 1920x1080 RTSP stream with 80% confidence threshold. 
+                        When a person is detected, system captures full-frame image with bounding box 
+                        and saves original high-quality photo to disk. This saves a still image of everyone who passes the house.
+                    </p>
+                    <p class="sarcasm-note">Because humans can't monitor video feeds 24/7 but AI can</p>
+                </div>
+                
+                <div class="feature-card">
+                    <span class="feature-icon">🔍</span>
+                    <h3 class="feature-title">2. AI Pre-screening</h3>
+                    <p class="feature-description">
+                        GPT-4.1-mini receives the captured image and determines if person is 
+                        clearly identifiable. Returns confidence level and description. 
+                        If person isn't recognizable, image is deleted. If identifiable, 
+                        proceeds to comprehensive analysis.
+                    </p>
+                    <p class="sarcasm-note">Quality control before the real profiling begins</p>
+                </div>
+                
+                <div class="feature-card">
+                    <span class="feature-icon">🧠</span>
+                    <h3 class="feature-title">3. Comprehensive Analysis</h3>
+                    <p class="feature-description">
+                        Single GPT-4.1-mini call with context analyzes: 
+                        nickname, physical description, clothing, purpose, demeanor, notable features, 
+                        and 2-3 sentence summary. Assumes normal neighborhood activities, 
+                        no "suspicious" behavior nonsense.
+                    </p>
+                    <p class="sarcasm-note">Turning computer vision into friendly neighborhood intelligence</p>
+                </div>
+                
+                <div class="feature-card">
+                    <span class="feature-icon">📈</span>
+                    <h3 class="feature-title">4. Profile Creation & Timeline</h3>
+                    <p class="feature-description">
+                        System creates/updates person profile with AI analysis, stores image paths, 
+                        and updates timeline dashboard. Each person gets nickname, visit count, 
+                        and comprehensive analysis visible on hover. All data persists locally.
+                    </p>
+                    <p class="sarcasm-note">Finding signal in the noise of everyday foot traffic</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="tech-specs">
+        <div class="container">
+            <h2 class="section-title" style="color: #fff;">Technical Specifications</h2>
+            <p style="text-align: center; color: #ccc; margin-bottom: 40px;">
+                <em>Or: How We Turned Your Doorbell Into a Dystopian Nightmare</em>
+            </p>
+            
+            <div class="tech-grid">
+                <div class="tech-item">
+                    <div class="tech-label">YOLO DETECTION</div>
+                    <div class="tech-description">
+                        Real-time object detection that treats every human as a potential threat. 
+                    </div>
+                </div>
+                
+                <div class="tech-item">
+                    <div class="tech-label">GPT-4O-MINI VISION</div>
+                    <div class="tech-description">
+                        Streamlined 2-API-call system with Philadelphia context. Pre-screening + comprehensive 
+                        analysis for efficient neighborhood profiling. No more 9-call overkill!
+                    </div>
+                </div>
+                
+                <div class="tech-item">
+                    <div class="tech-label">ORIGINAL IMAGE QUALITY</div>
+                    <div class="tech-description">
+                        No more black enhanced images! System saves original 1920x1080 captures 
+                        for clear AI analysis and timeline display.
+                    </div>
+                </div>
+                
+                <div class="tech-item">
+                    <div class="tech-label">RTSP STREAMING</div>
+                    <div class="tech-description">
+                        H.264 video processing ensures no moment of human dignity 
+                        goes unrecorded or unanalyzed by our benevolent AI overlords.
+                    </div>
+                </div>
+                
+                <div class="tech-item">
+                    <div class="tech-label">PERSISTENT STORAGE</div>
+                    <div class="tech-description">
+                        Because the right to be forgotten is so last century. We'll remember 
+                        every time you walked past, forever and ever.
+                    </div>
+                </div>
+                
+                <div class="tech-item">
+                    <div class="tech-label">PATTERN RECOGNITION</div>
+                    <div class="tech-description">
+                        Machine learning that finds sinister patterns in innocent routines. 
+                        "Subject exhibits suspicious regularity in mail delivery monitoring."
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="disclaimer">
+        <div class="disclaimer-text">
+            WARNING: This system may cause chronic paranoia, neighborhood disputes, and an overwhelming 
+            sense that everyone is plotting against you. Side effects include: loss of faith in humanity, 
+            compulsive curtain-twitching, and the urge to profile your own reflection.
+        </div>
+    </section>
+
+    <footer class="footer-art">
+        <div class="footer-content">
+            <p><strong>WatchPost AI</strong> - Surveillance Capitalism for the Masses</p>
+            <p>Proudly destroying community trust, one doorbell at a time</p>
+            <p class="artist-signature">
+                A satirical commentary on surveillance culture by Daniel Nakhla<br>
+                <em>AI/ML Engineer & Occasional Voice of Reason</em>
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        // Add some interactive elements
+        document.addEventListener('DOMContentLoaded', function() {
+            // Random surveillance "alerts"
+            const alerts = [
+                "SUBJECT DETECTED: Person walking with purpose",
+                "THREAT LEVEL: Medium - Individual carrying bag",
+                "SUSPICIOUS ACTIVITY: Person checking mobile device",
+                "BEHAVIOR ANALYSIS: Subject appears to be breathing regularly",
+                "PATTERN RECOGNITION: Individual exhibits bipedal locomotion"
+            ];
+            
+            function showRandomAlert() {
+                const alert = alerts[Math.floor(Math.random() * alerts.length)];
+                console.log(`🚨 ${alert}`);
+            }
+            
+            setInterval(showRandomAlert, 10000);
+            
+            // Make cards slightly interactive
+            document.querySelectorAll('.feature-card').forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'rotate(0deg) scale(1.2)';
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = this.getAttribute('data-original-transform') || 'rotate(0.5deg)';
+                });
+            });
+        });
+    </script>
+</body>
+</html>
