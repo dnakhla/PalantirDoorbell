@@ -138,6 +138,10 @@ def generate_frames():
     detection_frequency = 10  # Run detection every 10th frame for smoother web stream
     last_recovery_time = time.time()
     
+    # Auto-reset timer for web stream
+    last_auto_reset = time.time()
+    auto_reset_interval = 60  # Auto-reset every 60 seconds
+    
     while True:
         # Simple frame reading with basic error handling
         ret, frame = camera.read()
@@ -162,6 +166,18 @@ def generate_frames():
         
         if not _validate_web_frame(frame):
             continue
+        
+        # Auto-reset web stream every 60 seconds to prevent freezing
+        current_time = time.time()
+        if current_time - last_auto_reset > auto_reset_interval:
+            logger.info("🔄 Auto-resetting web stream to prevent freezing (60s interval)")
+            camera.release()
+            camera = get_camera_stream()
+            last_auto_reset = current_time
+            if not camera or not camera.isOpened():
+                logger.error("Failed to reset web stream")
+                time.sleep(2)
+                continue
         
         # Add real-time object detection overlay (reduced frequency for smoothness)
         frame_count += 1

@@ -894,13 +894,16 @@
             position: absolute;
             top: 10px;
             right: 10px;
-            width: 200px;
+            width: 280px;
+            max-height: 300px;
+            overflow-y: auto;
             background: rgba(0, 0, 0, 0.85);
             border: 1px solid #ccc;
             color: #fff;
             padding: 8px;
             font-size: 11px;
             font-family: Arial, sans-serif;
+            border-radius: 4px;
         }
 
         .overlay-content {
@@ -1805,6 +1808,26 @@
                                             <span class="label">Gender:</span>
                                             <span class="value gender-${gender.toLowerCase()}">${gender}</span>
                                         </div>
+                                        <div class="detail-item">
+                                            <span class="label">Skin:</span>
+                                            <span class="value">${analysis.skin_tone || 'Unknown'}</span>
+                                        </div>
+                                        ${analysis.summary ? `<div class="detail-item">
+                                            <span class="label">Summary:</span>
+                                            <span class="value">${analysis.summary}</span>
+                                        </div>` : ''}
+                                        ${analysis.physical_description ? `<div class="detail-item">
+                                            <span class="label">Physical:</span>
+                                            <span class="value">${analysis.physical_description}</span>
+                                        </div>` : ''}
+                                        ${analysis.notable_features && analysis.notable_features.length > 0 ? `<div class="detail-item">
+                                            <span class="label">Features:</span>
+                                            <span class="value">${analysis.notable_features.join(', ')}</span>
+                                        </div>` : ''}
+                                        ${profile.description && !analysis.summary ? `<div class="detail-item">
+                                            <span class="label">Description:</span>
+                                            <span class="value">${profile.description}</span>
+                                        </div>` : ''}
                                         <div class="detail-item">
                                             <span class="label">Skin Tone:</span>
                                             <span class="value skin-${skinTone.toLowerCase().replace(' ', '-')}">${skinTone}</span>

@@ -38,6 +38,10 @@ class CameraManager:
         self.last_quality_reset = time.time()
         self.min_reset_interval = 120  # Don't reset more than once every 2 minutes
         
+        # Auto-reset timer to prevent freezing
+        self.last_auto_reset = time.time()
+        self.auto_reset_interval = 60  # Auto-reset every 60 seconds
+        
     def initialize(self) -> bool:
         """Initialize camera and YOLO model with enhanced quality settings"""
         try:
@@ -239,6 +243,14 @@ class CameraManager:
                 if frame_skip_count < skip_every_n_frames:
                     continue  # Skip this frame
                 frame_skip_count = 0  # Reset counter
+                
+                # Auto-reset every 60 seconds to prevent freezing
+                current_time = time.time()
+                if current_time - self.last_auto_reset > self.auto_reset_interval:
+                    logger.info("🔄 Auto-resetting camera feed to prevent freezing (60s interval)")
+                    self._reset_camera_connection()
+                    self.last_auto_reset = current_time
+                    continue
                 
                 # Motion detection removed - capture every detection event for review
                 
@@ -493,98 +505,7 @@ class CameraManager:
             cv2.putText(full_screen_image, main_label, (x1 + 5, y1 - 5), 
                        cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 0), 2)
             
-            # Add comprehensive AI analysis info box to top right corner for stored images
-            if profile_info:
-                frame_height, frame_width = full_screen_image.shape[:2]
-                
-                # Prepare complete AI analysis info
-                info_lines = []
-                
-                # Name/Nickname
-                nickname = profile_info.get('nickname', '')
-                name = profile_info.get('name', '')
-                if nickname and nickname != name:
-                    info_lines.append(f"Name: {nickname}")
-                elif name:
-                    info_lines.append(f"Name: {name}")
-                
-                # Demographics
-                gender = profile_info.get('gender', 'unknown')
-                skin_tone = profile_info.get('skin_tone', 'unknown')
-                if gender != 'unknown':
-                    info_lines.append(f"Gender: {gender}")
-                if skin_tone != 'unknown':
-                    info_lines.append(f"Skin: {skin_tone}")
-                
-                # Summary (most important - show in full)
-                summary = profile_info.get('summary', '')
-                if summary:
-                    # Break long summary into multiple lines
-                    words = summary.split()
-                    current_line = ""
-                    for word in words:
-                        if len(current_line + word) < 35:
-                            current_line += word + " "
-                        else:
-                            if current_line.strip():
-                                info_lines.append(f"Summary: {current_line.strip()}")
-                                current_line = word + " "
-                            else:
-                                current_line = word + " "
-                    if current_line.strip():
-                        info_lines.append(f"Summary: {current_line.strip()}")
-                
-                # Physical description
-                physical_desc = profile_info.get('physical_description', '')
-                if physical_desc:
-                    # Break long description into multiple lines
-                    words = physical_desc.split()
-                    current_line = ""
-                    for word in words:
-                        if len(current_line + word) < 35:
-                            current_line += word + " "
-                        else:
-                            if current_line.strip():
-                                info_lines.append(f"Physical: {current_line.strip()}")
-                                current_line = word + " "
-                            else:
-                                current_line = word + " "
-                    if current_line.strip():
-                        info_lines.append(f"Physical: {current_line.strip()}")
-                
-                # Notable features
-                notable_features = profile_info.get('notable_features', [])
-                if notable_features and isinstance(notable_features, list):
-                    features_text = ", ".join(notable_features)
-                    info_lines.append(f"Features: {features_text}")
-                
-                # Basic description fallback
-                if not any('Summary:' in line for line in info_lines):
-                    description = profile_info.get('description', '')
-                    if description:
-                        info_lines.append(f"Description: {description[:30]}...")
-                
-                # Draw info box in top right corner
-                if info_lines:
-                    box_width = 320  # Wider for more content
-                    line_height = 18  # Slightly tighter spacing
-                    box_height = len(info_lines) * line_height + 20
-                    
-                    # Position in top right corner
-                    box_x = frame_width - box_width - 10
-                    box_y = 10
-                    
-                    # Draw background box with transparency effect
-                    cv2.rectangle(full_screen_image, (box_x, box_y), 
-                                 (box_x + box_width, box_y + box_height), (0, 0, 0), -1)
-                    cv2.rectangle(full_screen_image, (box_x, box_y), 
-                                 (box_x + box_width, box_y + box_height), (255, 255, 255), 2)
-                    
-                    # Draw info lines with better formatting
-                    for i, line in enumerate(info_lines):
-                        text_y = box_y + 18 + (i * line_height)
-                        cv2.putText(full_screen_image, line, (box_x + 8, text_y), 
-                                   cv2.FONT_HERSHEY_SIMPLEX, 0.45, (255, 255, 255), 1)
+            # Video overlay removed - AI analysis now shown in dashboard CSS overlay only
             
             # Timestamp label
             timestamp_size = cv2.getTextSize(timestamp, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 2)[0]
