@@ -28,6 +28,7 @@ class PersonProfile:
     last_seen: datetime
     total_appearances: int
     ai_analysis: Optional[str] = None
+    last_analysis_time: Optional[datetime] = None
     
     def __post_init__(self):
         if not self.id:

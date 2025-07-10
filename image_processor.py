@@ -17,21 +17,32 @@ class ImageProcessor:
         self.image_counter = 0
     
     def save_person_image(self, detection: PersonDetection, image: np.ndarray) -> str:
-        """Save a person detection image - using original image only"""
+        """Save a person detection image - optimized for speed and quality"""
         try:
             # Generate filename
             timestamp = detection.timestamp.strftime("%Y%m%d_%H%M%S")
             filename = f"person_{timestamp}_{self.image_counter:04d}.jpg"
             filepath = os.path.join(config.CAPTURED_IMAGES_DIR, filename)
             
-            # Save ONLY the original image with high quality (no enhancement)
+            # Resize image for faster processing if it's too large
+            height, width = image.shape[:2]
+            if height > 720 or width > 1280:
+                # Resize to max 720p for faster processing
+                scale = min(1280/width, 720/height)
+                new_width = int(width * scale)
+                new_height = int(height * scale)
+                image = cv2.resize(image, (new_width, new_height), interpolation=cv2.INTER_AREA)
+                logger.debug(f"Resized image from {width}x{height} to {new_width}x{new_height}")
+            
+            # Save with optimized compression settings for speed
             cv2.imwrite(filepath, image, [
-                cv2.IMWRITE_JPEG_QUALITY, 95,
-                cv2.IMWRITE_JPEG_OPTIMIZE, 1
+                cv2.IMWRITE_JPEG_QUALITY, 85,  # Slightly reduced quality for speed
+                cv2.IMWRITE_JPEG_OPTIMIZE, 1,
+                cv2.IMWRITE_JPEG_PROGRESSIVE, 1  # Progressive JPEG for faster loading
             ])
             
             self.image_counter += 1
-            logger.info(f"✅ Saved original person image: {filename}")
+            logger.info(f"✅ Saved optimized person image: {filename}")
             return filepath
             
         except Exception as e:

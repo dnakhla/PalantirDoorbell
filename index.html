@@ -1322,7 +1322,7 @@
             <div class="features-grid">
                 <div class="feature-card">
                     <span class="feature-icon">📸</span>
-                    <h3 class="feature-title">1. Real-Time Detection</h3>
+                    <h3 class="feature-title">1. YOLO Detection</h3>
                     <p class="feature-description">
                         YOLO v8 processes live RTSP video feed with configurable confidence threshold. 
                         When a person is detected, the system captures high-resolution images with 
@@ -1332,17 +1332,17 @@
                 
                 <div class="feature-card">
                     <span class="feature-icon">🔍</span>
-                    <h3 class="feature-title">2. Image Quality Assessment</h3>
+                    <h3 class="feature-title">2. HOG Feature Matching</h3>
                     <p class="feature-description">
-                        GPT-4.1 Vision API analyzes captured images to determine if people are 
-                        clearly identifiable before processing. This quality gate ensures only 
-                        usable images proceed to full analysis, demonstrating AI-powered data filtering.
+                        Histogram of Oriented Gradients (HOG) extracts distinctive features from detected persons 
+                        for similarity matching. Uses computer vision to identify the same person across multiple 
+                        frames, creating coherent visit sessions for timeline grouping and GIF generation.
                     </p>
                 </div>
                 
                 <div class="feature-card">
                     <span class="feature-icon">🧠</span>
-                    <h3 class="feature-title">3. Structured Data Extraction</h3>
+                    <h3 class="feature-title">3. Vision Analysis</h3>
                     <p class="feature-description">
                         GPT-4.1 Vision API generates structured profiles from images including 
                         descriptive nicknames, physical characteristics, clothing, and behavioral context. 
@@ -1352,11 +1352,11 @@
                 
                 <div class="feature-card">
                     <span class="feature-icon">📈</span>
-                    <h3 class="feature-title">4. Persistent Intelligence</h3>
+                    <h3 class="feature-title">4. Logs and Insights</h3>
                     <p class="feature-description">
-                        System maintains person profiles with visit tracking, pattern recognition, and 
-                        comprehensive timeline visualization. Demonstrates how AI can build persistent 
-                        intelligence from continuous data streams while keeping all processing local.
+                        System maintains comprehensive logs with visit tracking, pattern recognition, and 
+                        timeline visualization. Demonstrates how AI can build persistent intelligence 
+                        from continuous data streams while keeping all processing local for privacy.
                     </p>
                 </div>
             </div>
@@ -1518,15 +1518,15 @@
                     While this project demonstrates AI surveillance capabilities, it's important to understand 
                     the legal framework surrounding privacy in public spaces and residential areas.
                 </p>
-                <p>
+                <p class="legal-highlight">
                     In most jurisdictions, there is <strong>no expectation of privacy</strong> in public spaces 
                     visible from public property. However, the use of AI for automated analysis and long-term 
                     tracking raises new legal and ethical questions.
                 </p>
-                <div class="legal-highlight">
+                <!-- <div class="legal-highlight">
                     This POC operates entirely on your own property, analyzing footage from your own camera, 
                     for your own use.
-                </div>
+                </div> -->
                 <p>
                     The legal landscape around AI surveillance is rapidly evolving. Several cities and states 
                     are implementing restrictions on automated surveillance systems, facial recognition, and 

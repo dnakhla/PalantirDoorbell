@@ -11,6 +11,7 @@ import numpy as np
 from datetime import datetime
 from typing import Dict, List, Optional
 import logging
+import time
 
 from config import config
 from main import DoorbellAI
@@ -22,6 +23,7 @@ logger = logging.getLogger(__name__)
 camera_stream = None
 app_instance = None
 websocket_connections = set()
+stream_restart_count = 0
 
 def _validate_web_frame(frame):
     """Validate frame integrity for web stream"""
@@ -47,46 +49,70 @@ def _validate_web_frame(frame):
     return True
 
 def get_camera_stream():
-    """Initialize camera stream for video display"""
+    """Initialize camera stream for video display with optimized settings"""
     global camera_stream
-    if camera_stream is None:
+    if camera_stream is None or not camera_stream.isOpened():
         try:
-            # Setup optimal FFmpeg environment for RTSP
+            # Release existing stream if it exists
+            if camera_stream is not None:
+                camera_stream.release()
+            
+            # Protocol-optimized FFmpeg setup
             import os
-            os.environ['OPENCV_FFMPEG_CAPTURE_OPTIONS'] = (
-                'rtsp_transport;tcp|'
-                'buffer_size;1024000|'
-                'max_delay;500000|'
-                'stimeout;30000000'
-            )
+            if config.USE_RTMP:
+                # RTMP optimized for web streaming
+                os.environ['OPENCV_FFMPEG_CAPTURE_OPTIONS'] = (
+                    'buffer_size;256000|'      # Small buffer for web
+                    'max_delay;100000|'        # Very low delay
+                    'fflags;nobuffer|'         # No buffering
+                    'flags;low_delay|'         # Low delay
+                    'err_detect;ignore_err|'   # Ignore errors
+                    'rw_timeout;5000000'       # 5 second timeout
+                )
+            else:
+                # High-res RTSP optimized for web display of 5MP stream
+                os.environ['OPENCV_FFMPEG_CAPTURE_OPTIONS'] = (
+                    'rtsp_transport;tcp|'           # TCP for high-bitrate
+                    'buffer_size;1024000|'          # Medium buffer for 4096kbps
+                    'max_delay;500000|'             # Balanced delay for high-res
+                    'stimeout;15000000|'            # 15s timeout
+                    'reconnect;1|'                  # Auto-reconnect
+                    'reconnect_streamed;1|'
+                    'reconnect_delay_max;2|'        # Stable reconnect
+                    'fflags;flush_packets|'         # Flush for high bitrate
+                    'flags;low_delay|'              # Low delay when possible
+                    'probesize;1048576|'            # 1MB probe for web
+                    'analyzeduration;1000000|'      # 1s analysis
+                    'err_detect;ignore_err|'        # Ignore H.264 errors
+                    'avoid_negative_ts;make_zero|'  # Fix timestamps
+                    'max_interleave_delta;200000'   # Small interleave for web
+                )
             
-            camera_stream = cv2.VideoCapture(config.RTSP_URL, cv2.CAP_FFMPEG)
+            camera_stream = cv2.VideoCapture(config.CAMERA_URL, cv2.CAP_FFMPEG)
             
-            # Optimal settings for web display stability
-            camera_stream.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
-            camera_stream.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
-            camera_stream.set(cv2.CAP_PROP_FPS, 25)
+            # Simple settings for web stream
+            camera_stream.set(cv2.CAP_PROP_FPS, 15)
             camera_stream.set(cv2.CAP_PROP_BUFFERSIZE, 1)
             camera_stream.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('H', '2', '6', '4'))
-            camera_stream.set(cv2.CAP_PROP_OPEN_TIMEOUT_MSEC, 30000)
-            camera_stream.set(cv2.CAP_PROP_READ_TIMEOUT_MSEC, 30000)
-            # Format specification removed - invalid constant
             
-            # Verify connection and settings
             if not camera_stream.isOpened():
-                raise ConnectionError("Failed to open camera stream")
-            
-            actual_width = int(camera_stream.get(cv2.CAP_PROP_FRAME_WIDTH))
-            actual_height = int(camera_stream.get(cv2.CAP_PROP_FRAME_HEIGHT))
-            logger.info(f"Optimized camera stream initialized for web display at {actual_width}x{actual_height}")
+                logger.error("Failed to open camera stream")
+                camera_stream = None
+            else:
+                actual_width = int(camera_stream.get(cv2.CAP_PROP_FRAME_WIDTH))
+                actual_height = int(camera_stream.get(cv2.CAP_PROP_FRAME_HEIGHT))
+                logger.info(f"🔄 Web camera stream initialized: {actual_width}x{actual_height}")
+                
         except Exception as e:
             logger.error(f"Failed to initialize camera stream: {e}")
+            camera_stream = None
     return camera_stream
 
 def generate_frames():
     """Generate video frames for streaming with real-time object detection"""
     camera = get_camera_stream()
     if not camera or not camera.isOpened():
+        logger.error("No camera available for web stream")
         return
     
     # Load YOLO model for real-time detection overlay
@@ -108,30 +134,52 @@ def generate_frames():
     
     consecutive_failures = 0
     max_failures = 3
+    frame_count = 0
+    detection_frequency = 10  # Run detection every 10th frame for smoother web stream
+    last_recovery_time = time.time()
     
     while True:
+        # Simple frame reading with basic error handling
         ret, frame = camera.read()
         if not ret:
             consecutive_failures += 1
-            logger.warning(f"Web stream failed to read frame ({consecutive_failures}/{max_failures})")
+            if consecutive_failures % 10 == 0:  # Log every 10th failure
+                logger.warning(f"Web stream read failures: {consecutive_failures}")
             
-            if consecutive_failures >= max_failures:
-                logger.error("Too many web stream failures, stopping")
-                break
+            if consecutive_failures >= max_failures * 5:  # Higher threshold
+                logger.info("🔄 Attempting camera reconnection...")
+                camera = get_camera_stream()
+                consecutive_failures = 0
+                if camera and camera.isOpened():
+                    logger.info("✅ Camera reconnected")
+                else:
+                    time.sleep(2)
             
-            time.sleep(0.1)
+            time.sleep(0.05)  # Shorter delay
             continue
         
-        # Reset failure counter and validate frame
         consecutive_failures = 0
+        
         if not _validate_web_frame(frame):
             continue
         
-        # Add real-time object detection overlay
-        if yolo_model is not None:
+        # Add real-time object detection overlay (reduced frequency for smoothness)
+        frame_count += 1
+        if yolo_model is not None and frame_count % detection_frequency == 0:
             try:
-                # Run YOLO detection for multiple objects
-                results = yolo_model(frame, conf=0.5, classes=[0, 2, 3, 5, 7], verbose=False)  # person, car, motorcycle, bus, truck
+                # Resize frame for processing if too large
+                processing_frame = frame
+                original_height, original_width = frame.shape[:2]
+                scale_factor = 1.0
+                if original_height > 720 or original_width > 1280:
+                    scale = min(1280/original_width, 720/original_height)
+                    new_width = int(original_width * scale)
+                    new_height = int(original_height * scale)
+                    processing_frame = cv2.resize(frame, (new_width, new_height), interpolation=cv2.INTER_AREA)
+                    scale_factor = max(original_width / new_width, original_height / new_height)
+                
+                # Run YOLO detection for multiple objects (reduced frequency)
+                results = yolo_model(processing_frame, conf=0.6, classes=[0, 15, 16], verbose=False)  # person, cat, dog
                 
                 # Draw bounding boxes on frame
                 if results[0].boxes is not None:
@@ -147,19 +195,20 @@ def generate_frames():
                         
                         if class_id == 0:  # Person
                             main_label = "SUBJECT DETECTED"
-                        elif class_id == 2:  # Car
-                            main_label = "VEHICLE DETECTED"
-                        elif class_id == 3:  # Motorcycle
-                            main_label = "MOTORCYCLE DETECTED"
-                        elif class_id == 5:  # Bus
-                            main_label = "BUS DETECTED"
-                        elif class_id == 7:  # Truck
-                            main_label = "TRUCK DETECTED"
+                        elif class_id == 15:  # Cat
+                            main_label = "CAT DETECTED"
+                        elif class_id == 16:  # Dog
+                            main_label = "DOG DETECTED"
                         else:
                             continue  # Skip unknown classes
                         
-                        # Process the detection
+                        # Process the detection - scale coordinates back to original frame
                         x1, y1, x2, y2 = map(int, box.xyxy[0])
+                        if scale_factor != 1.0:
+                            x1 = int(x1 * scale_factor)
+                            y1 = int(y1 * scale_factor)
+                            x2 = int(x2 * scale_factor)
+                            y2 = int(y2 * scale_factor)
                         
                         # Draw shadow for depth effect - increased thickness
                         shadow_offset = 3
@@ -235,15 +284,15 @@ def generate_frames():
             except Exception as e:
                 logger.warning(f"Error in real-time detection: {e}")
         
-        # Resize frame for web display with optimized quality
-        # Resize to 1280x720 for better streaming performance
-        frame = cv2.resize(frame, (1280, 720), interpolation=cv2.INTER_LANCZOS4)
+        # Resize frame for web display with performance priority
+        # Resize to 960x540 for smoother streaming
+        frame = cv2.resize(frame, (960, 540), interpolation=cv2.INTER_AREA)
         
-        # Encode frame with optimized settings for smooth streaming
+        # Encode frame with optimized settings for maximum smoothness
         encode_params = [
-            cv2.IMWRITE_JPEG_QUALITY, 80,  # Balanced quality for streaming
+            cv2.IMWRITE_JPEG_QUALITY, 70,  # Lower quality for faster encoding
             cv2.IMWRITE_JPEG_OPTIMIZE, 1,  # Optimize for size
-            cv2.IMWRITE_JPEG_PROGRESSIVE, 1  # Progressive JPEG for better streaming
+            cv2.IMWRITE_JPEG_PROGRESSIVE, 0  # Disable progressive for faster encoding
         ]
         
         ret, buffer = cv2.imencode('.jpg', frame, encode_params)
@@ -260,7 +309,7 @@ async def initialize_detection_system():
         app_instance = DoorbellAI()
         
         # Test camera connection first
-        logger.info(f"Testing camera connection to: {config.RTSP_URL}")
+        logger.info(f"Testing camera connection to: {config.CAMERA_URL} ({'RTMP' if config.USE_RTMP else 'RTSP'} protocol)")
         
         success = await app_instance.start()
         if success:
@@ -452,12 +501,38 @@ async def get_live_feed():
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
+    stream_healthy = False
+    if camera_stream is not None:
+        stream_healthy = camera_stream.isOpened()
+    
     return JSONResponse({
         "status": "healthy",
         "timestamp": datetime.now().isoformat(),
         "system_initialized": app_instance is not None,
-        "detection_running": app_instance.is_running if app_instance else False
+        "detection_running": app_instance.is_running if app_instance else False,
+        "stream_healthy": stream_healthy
     })
+
+@app.post("/api/stream/restart")
+async def restart_stream():
+    """Restart the camera stream"""
+    global camera_stream
+    try:
+        if camera_stream:
+            camera_stream.release()
+        camera_stream = None
+        
+        # Reinitialize stream
+        new_stream = get_camera_stream()
+        if new_stream and new_stream.isOpened():
+            logger.info("🔄 Camera stream restarted successfully")
+            return JSONResponse({"success": True, "message": "Stream restarted successfully"})
+        else:
+            logger.error("❌ Failed to restart camera stream")
+            return JSONResponse({"success": False, "message": "Failed to restart stream"})
+    except Exception as e:
+        logger.error(f"Error restarting stream: {e}")
+        return JSONResponse({"success": False, "message": f"Error: {str(e)}"})
 
 # Error handlers
 @app.exception_handler(404)

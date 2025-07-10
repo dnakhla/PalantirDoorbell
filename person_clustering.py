@@ -91,10 +91,27 @@ class PersonClustering:
         return features
     
     def find_similar_person(self, detection: PersonDetection, image_path: str) -> Optional[str]:
-        """Find existing person profile that matches the detection"""
+        """Hybrid approach: HOG similarity first, then time-based fallback"""
         if not image_path or not os.path.exists(image_path):
-            return None
+            return self.find_recent_person(detection)
         
+        # Step 1: Try HOG similarity matching
+        hog_match = self._find_by_similarity(image_path)
+        if hog_match:
+            logger.info(f"✅ HOG similarity match: {hog_match}")
+            return hog_match
+        
+        # Step 2: Fallback to time-based grouping
+        time_match = self.find_recent_person(detection)
+        if time_match:
+            logger.info(f"⏰ Time-based fallback match: {time_match}")
+            return time_match
+        
+        logger.info(f"🆕 No match found - will create new profile")
+        return None
+    
+    def _find_by_similarity(self, image_path: str) -> Optional[str]:
+        """Find existing person using HOG similarity with GIF-friendly constraints"""
         # Extract features for new detection
         new_features = self.extract_features(image_path)
         if new_features is None:
@@ -102,16 +119,26 @@ class PersonClustering:
         
         best_match_id = None
         best_similarity = 0
+        max_images_per_session = 15  # Same limit as time-based grouping
         
-        # Compare with existing profiles
+        # Compare with existing profiles (only recent ones for speed)
         for profile_id, profile in self.profiles.items():
             if not profile.images:
                 continue
             
-            # Calculate similarity with existing images in profile
+            # Only check profiles from last hour for performance
+            if (datetime.now() - profile.last_seen).total_seconds() > 3600:
+                continue
+            
+            # Check if profile has room for more images (GIF-friendly limit)
+            if len(profile.images) >= max_images_per_session:
+                logger.info(f"📹 HOG skip: {profile_id} has {len(profile.images)} images (max: {max_images_per_session})")
+                continue
+            
+            # Calculate similarity with last few images
             profile_similarities = []
             
-            for existing_image_path in profile.images[-3:]:  # Check last 3 images
+            for existing_image_path in profile.images[-3:]:
                 if not os.path.exists(existing_image_path):
                     continue
                 
@@ -138,9 +165,42 @@ class PersonClustering:
                     best_match_id = profile_id
         
         if best_match_id:
-            logger.info(f"Found matching person: {best_match_id} (similarity: {best_similarity:.3f})")
+            logger.info(f"🎯 HOG match found: {best_match_id} (similarity: {best_similarity:.3f})")
         
         return best_match_id
+    
+    def find_recent_person(self, detection: PersonDetection) -> Optional[str]:
+        """Find a person profile based on recent time proximity with GIF-friendly grouping"""
+        current_time = detection.timestamp
+        time_window_seconds = 60  # Tight 1-minute window for GIF creation
+        max_images_per_session = 15  # Maximum images per GIF session
+        
+        # Look for profiles with recent activity
+        for profile_id, profile in self.profiles.items():
+            if not profile.detections:
+                continue
+            
+            # Check if last detection was within the time window
+            last_detection_time = profile.last_seen
+            time_diff = (current_time - last_detection_time).total_seconds()
+            
+            # Check if we're within the tight time window
+            if time_diff <= time_window_seconds:
+                # Check if we haven't exceeded the max images for this session
+                if len(profile.images) < max_images_per_session:
+                    logger.info(f"⏰ Recent visit found: {profile_id} (last seen {time_diff:.1f} seconds ago, {len(profile.images)} images)")
+                    return profile_id
+                else:
+                    logger.info(f"📹 Session full: {profile_id} has {len(profile.images)} images (max: {max_images_per_session})")
+                    # Don't return this profile - let it create a new one for the next session
+                    continue
+            
+            # Check for session gap - if there's a gap of more than 2 minutes, start new session
+            elif time_diff > 120:  # 2 minutes gap indicates new visit
+                continue
+        
+        # No recent profile found within tight constraints
+        return None
     
     def create_new_profile(self, detection: PersonDetection, image_path: str, description: str = "") -> PersonProfile:
         """Create a new person profile"""
@@ -170,6 +230,26 @@ class PersonClustering:
         
         # Update image path in detection
         detection.image_path = image_path
+        
+        # Cleanup old images if we exceed the limit
+        if len(profile.images) > config.MAX_IMAGES_PER_PROFILE:
+            # Remove oldest images and detections
+            excess_count = len(profile.images) - config.MAX_IMAGES_PER_PROFILE
+            
+            # Delete old image files
+            for old_image in profile.images[:excess_count]:
+                try:
+                    if os.path.exists(old_image):
+                        os.remove(old_image)
+                        logger.info(f"🗑️ Deleted old image: {old_image}")
+                except Exception as e:
+                    logger.warning(f"Failed to delete old image {old_image}: {e}")
+            
+            # Keep only recent images and detections
+            profile.images = profile.images[excess_count:]
+            profile.detections = profile.detections[excess_count:]
+            
+            logger.info(f"📉 Trimmed profile {profile_id} to {len(profile.images)} images")
         
         logger.info(f"Added detection to profile {profile_id}")
         
